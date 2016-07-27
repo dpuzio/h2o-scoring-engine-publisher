@@ -38,6 +38,7 @@ import org.trustedanalytics.h2oscoringengine.publisher.restapi.validation.Downlo
 import org.trustedanalytics.h2oscoringengine.publisher.restapi.validation.DownloadRequestValidationRules;
 import org.trustedanalytics.h2oscoringengine.publisher.restapi.validation.ValidationException;
 
+import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
 import java.util.List;
 
@@ -85,7 +86,7 @@ public class PublisherController {
   @RequestMapping(method = RequestMethod.POST, consumes = "application/x-www-form-urlencoded",
       value = "/rest/h2o/engines/{modelName}/downloads", produces = "application/java-archive")
   @ResponseBody
-  public FileSystemResource downloadEngine(
+  public FileSystemResource downloadEngine(HttpServletResponse response,
       @Valid @RequestBody MultiValueMap<String, String> request, @PathVariable String modelName)
       throws EngineBuildingException, ValidationException {
 
@@ -94,6 +95,8 @@ public class PublisherController {
 
     BasicAuthServerCredentials h2oServerCredentials = new BasicAuthServerCredentials(
         request.get("host").get(0), request.get("username").get(0), request.get("password").get(0));
+
+    response.setHeader("Content-Disposition", String.format("attachment; filename=%s.jar", modelName));
 
     return new FileSystemResource(
         publisher.getScoringEngineJar(h2oServerCredentials, modelName).toFile());

@@ -30,6 +30,7 @@ import javax.servlet.http.HttpServletResponse;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
+import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.trustedanalytics.h2oscoringengine.publisher.EngineBuildingException;
@@ -89,7 +90,7 @@ public class PublisherControllerTest {
 
     // when
     when(publisherMock.getScoringEngineJar(any(), any())).thenReturn(Paths.get("/tmp/"));
-    controller.downloadEngine(testPostRequest, testModelName);
+    controller.downloadEngine(new MockHttpServletResponse(), testPostRequest, testModelName);
 
     // then
     verify(publisherMock).getScoringEngineJar(credentialsCaptor.capture(), eq(testModelName));
