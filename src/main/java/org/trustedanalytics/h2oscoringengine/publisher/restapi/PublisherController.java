@@ -88,7 +88,7 @@ public class PublisherController {
   @ResponseBody
   public FileSystemResource downloadEngine(HttpServletResponse response,
       @Valid @RequestBody MultiValueMap<String, String> request, @PathVariable String modelName)
-      throws EngineBuildingException, ValidationException {
+      throws EngineBuildingException {
 
     LOGGER.info("Got download request: " + request + " modelName:" + modelName);
     validationRules.forEach(rule -> rule.validate(request));
@@ -100,49 +100,6 @@ public class PublisherController {
 
     return new FileSystemResource(
         publisher.getScoringEngineJar(h2oServerCredentials, modelName).toFile());
-  }
-
-  /**
-   * @deprecated This API endpoint will be removed.  
-   */
-  @ApiOperation(
-          value = "Deprecated route: Publishes model as a service offering in Marketplace",
-          notes = "Privilege level: Any consumer of this endpoint must have a valid access token"
-  )
-  @ApiResponses(value = {
-          @ApiResponse(code = 200, message = "OK"),
-          @ApiResponse(code = 500, message = "Internal server error, e.g. error building or publishing model")
-  })
-  @RequestMapping(method = RequestMethod.POST, consumes = "application/json",
-      value = "/rest/engine")
-  @Deprecated
-  public void publishOldEndpoint(@Valid @RequestBody PublishRequest publishRequest)
-      throws EnginePublicationException, EngineBuildingException {
-    LOGGER.info("Got publish request: " + publishRequest);
-    publisher.publish(publishRequest);
-  }
-
-  /**
-   * @deprecated This API endpoint will be removed.  
-   */
-  @ApiOperation(
-          value = "Deprecated route: Exposes H2O scoring engine model for download as JAR file",
-          notes = "Privilege level: Any consumer of this endpoint must have a valid access token"
-  )
-  @ApiResponses(value = {
-          @ApiResponse(code = 200, message = "OK"),
-          @ApiResponse(code = 500, message = "Internal server error, e.g. error building model")
-  })
-  @RequestMapping(method = RequestMethod.POST, consumes = "application/json",
-      value = "/rest/downloads", produces = "application/java-archive")
-  @ResponseBody
-  @Deprecated
-  public FileSystemResource downloadEngine(@Valid @RequestBody DownloadRequest downloadRequest)
-      throws EngineBuildingException {
-    LOGGER.info("Got download request: " + downloadRequest);
-    return new FileSystemResource(publisher
-        .getScoringEngineJar(downloadRequest.getH2oCredentials(), downloadRequest.getModelName())
-        .toFile());
   }
 
   @ExceptionHandler(ValidationException.class)

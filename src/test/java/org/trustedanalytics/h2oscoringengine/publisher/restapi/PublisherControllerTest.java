@@ -131,32 +131,4 @@ public class PublisherControllerTest {
     // then
     assertThat(message, is(equalTo(testException.getMessage())));
   }
-
-  @Test
-  public void downloadEngineOldApi_callsPublisher() throws Exception {
-    // given
-    PublisherController controller =
-        new PublisherController(publisherMock, new DownloadRequestValidationRules());
-
-    // when
-    when(publisherMock.getScoringEngineJar(testH2oCredentials, testModelName))
-        .thenReturn(Paths.get("/tmp/"));
-    controller.downloadEngine(testDownloadRequest);
-
-    // then
-    verify(publisherMock).getScoringEngineJar(testH2oCredentials, testModelName);
-  }
-
-  @Test
-  public void publishOldApi_callsPublisher() throws Exception {
-    // given
-    PublisherController controller =
-        new PublisherController(publisherMock, new DownloadRequestValidationRules());
-
-    // when
-    controller.publishOldEndpoint(testPublishRequest);
-
-    // then
-    verify(publisherMock).publish(testPublishRequest);
-  }
 }
