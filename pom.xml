@@ -8,7 +8,7 @@
 	</parent>
 
 	<artifactId>h2o-scoring-engine-publisher</artifactId>
-	<version>0.6.1</version>
+	<version>0.7.0</version>
 	<name>h2o-scoring-engine-publisher</name>
 
 	<properties>
@@ -17,6 +17,8 @@
 		<jacoco-measurement-branches>0.780</jacoco-measurement-branches>
 		<jacoco-measurement-lines>0.900</jacoco-measurement-lines>
 		<jacoco-measurement-classes>0.850</jacoco-measurement-classes>
+		<docker.imageName>${project.artifactId}</docker.imageName>
+		<docker.registry>tapimages.us.enableiot.com:8080</docker.registry>
 	</properties>
 
 	<dependencies>
@@ -166,6 +168,28 @@
 					<additionalClasspathElements>
 						<additionalClasspathElement>${env.JAVA_HOME}/lib/tools.jar</additionalClasspathElement>
 					</additionalClasspathElements>
+				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>com.spotify</groupId>
+				<artifactId>docker-maven-plugin</artifactId>
+				<version>0.4.12</version>
+				<configuration>
+					<imageName>${docker.imageName}</imageName>
+					<baseImage>openjdk:8</baseImage>
+					<cmd>["java", "-jar", "/${project.build.finalName}.jar"]</cmd>
+					<useConfigFile>true</useConfigFile>
+					<resources>
+						<resource>
+							<targetPath>/</targetPath>
+							<directory>${project.build.directory}</directory>
+							<include>${project.build.finalName}.jar</include>
+						</resource>
+					</resources>
+					<env>
+						<PORT>8080</PORT>
+						<JAVA_OPTS>-Xmx512m</JAVA_OPTS>
+					</env>
 				</configuration>
 			</plugin>
 		</plugins>
