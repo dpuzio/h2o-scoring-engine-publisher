@@ -17,24 +17,11 @@ import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 
 public final class HttpCommunication {
-  
+
   public static final String CONTENT_TYPE_HEADER_NAME = "Content-type";
   public static final String JSON_ACCEPT_HEADER_VALUE = "application/json";
-  
-  private HttpCommunication(){
-  }
 
-  public static HttpEntity<String> simpleJsonRequest() {
-    return new HttpEntity<>(createJsonHeaders());
-  }
-
-  public static HttpEntity<String> postRequest(String body) {
-    HttpHeaders headers = new HttpHeaders();
-    headers.add("Accept", JSON_ACCEPT_HEADER_VALUE);
-    headers.add(CONTENT_TYPE_HEADER_NAME, "application/x-www-form-urlencoded");
-
-    return new HttpEntity<>(body, headers);
-  }
+  private HttpCommunication() {}
 
   public static HttpEntity<String> basicAuthRequest(String basicAuthToken) {
     HttpHeaders headers = new HttpHeaders();
@@ -42,7 +29,7 @@ public final class HttpCommunication {
 
     return new HttpEntity<>(headers);
   }
-  
+
   public static HttpHeaders basicAuthJsonHeaders(String basicAuthToken) {
     HttpHeaders headers = new HttpHeaders();
     headers.add(CONTENT_TYPE_HEADER_NAME, JSON_ACCEPT_HEADER_VALUE);
@@ -50,20 +37,5 @@ public final class HttpCommunication {
 
     return headers;
   }
-  
-  public static HttpHeaders zipHeaders() {
-    HttpHeaders bitsHeaders = new HttpHeaders();
-    bitsHeaders.add(CONTENT_TYPE_HEADER_NAME, "application/zip");
 
-    return bitsHeaders;
-  }
-
-  private static HttpHeaders createJsonHeaders() {
-    HttpHeaders headers = new HttpHeaders();
-    headers.add("Accept", JSON_ACCEPT_HEADER_VALUE);
-    headers.add(CONTENT_TYPE_HEADER_NAME, JSON_ACCEPT_HEADER_VALUE);
-
-    return headers;
-  }
-  
 }

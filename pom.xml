@@ -4,19 +4,19 @@
 	<parent>
 		<groupId>org.trustedanalytics</groupId>
 		<artifactId>trustedanalytics-cloud-parent</artifactId>
-		<version>0.6.2</version>
+		<version>0.6.3</version>
 	</parent>
 
 	<artifactId>h2o-scoring-engine-publisher</artifactId>
-	<version>0.7.0</version>
+	<version>0.7.1</version>
 	<name>h2o-scoring-engine-publisher</name>
 
 	<properties>
 		<start-class>org.trustedanalytics.h2oscoringengine.publisher.Application</start-class>
-		<jacoco-measurement-instructions>0.900</jacoco-measurement-instructions>
-		<jacoco-measurement-branches>0.780</jacoco-measurement-branches>
-		<jacoco-measurement-lines>0.900</jacoco-measurement-lines>
-		<jacoco-measurement-classes>0.850</jacoco-measurement-classes>
+		<jacoco-measurement-instructions>0.850</jacoco-measurement-instructions>
+		<jacoco-measurement-branches>0.700</jacoco-measurement-branches>
+		<jacoco-measurement-lines>0.850</jacoco-measurement-lines>
+		<jacoco-measurement-classes>0.840</jacoco-measurement-classes>
 		<docker.imageName>${project.artifactId}</docker.imageName>
 		<docker.registry>tapimages.us.enableiot.com:8080</docker.registry>
 	</properties>
@@ -34,7 +34,7 @@
 		<dependency>
 			<groupId>org.trustedanalytics</groupId>
 			<artifactId>h2o-scoring-engine-base</artifactId>
-			<version>0.5.1</version>
+			<version>0.5.4</version>
 			<scope>provided</scope>
 		</dependency>
 		<dependency>
@@ -64,51 +64,22 @@
 		<dependency>
 			<groupId>org.springframework</groupId>
 			<artifactId>spring-test</artifactId>
-			<version>4.2.6.RELEASE</version>
+			<version>4.3.2.RELEASE</version>
 			<scope>test</scope>
 		</dependency>
 		<dependency>
 			<groupId>commons-validator</groupId>
 			<artifactId>commons-validator</artifactId>
-			<version>1.5.0</version>
+			<version>1.5.1</version>
 		</dependency>
 		<dependency>
 			<groupId>io.springfox</groupId>
 			<artifactId>springfox-swagger2</artifactId>
-			<version>2.3.1</version>
+			<version>2.5.0</version>
 		</dependency>
 	</dependencies>
 	<build>
-		<resources>
-			<resource>
-				<directory>src/cloudfoundry</directory>
-				<filtering>true</filtering>
-			</resource>
-			<resource>
-				<directory>src/main/resources</directory>
-				<filtering>false</filtering>
-			</resource>
-		</resources>
 		<plugins>
-			<plugin>
-				<groupId>org.codehaus.mojo</groupId>
-				<artifactId>exec-maven-plugin</artifactId>
-				<executions>
-					<execution>
-						<goals>
-							<goal>exec</goal>
-						</goals>
-						<phase>package</phase>
-					</execution>
-				</executions>
-				<configuration>
-					<executable>cp</executable>
-					<arguments>
-						<argument>target/classes/manifest.yml</argument>
-						<argument>manifest.yml</argument>
-					</arguments>
-				</configuration>
-			</plugin>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-assembly-plugin</artifactId>

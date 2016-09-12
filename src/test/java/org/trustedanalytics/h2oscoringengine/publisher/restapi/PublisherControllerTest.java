@@ -25,9 +25,6 @@ import static org.mockito.Mockito.when;
 
 import java.nio.file.Paths;
 
-import javax.servlet.http.HttpServletResponse;
-
-import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.springframework.mock.web.MockHttpServletResponse;
@@ -42,40 +39,12 @@ import org.trustedanalytics.h2oscoringengine.publisher.restapi.validation.Valida
 public class PublisherControllerTest {
 
   private Publisher publisherMock = mock(Publisher.class);
-  private PublishRequest testPublishRequest;
-  private DownloadRequest testDownloadRequest;
   private String testHost = "http://example.com";
   private String testUsername = "username";
   private String testPassword = "password";
-  private BasicAuthServerCredentials testH2oCredentials =
-      new BasicAuthServerCredentials(testHost, testUsername, testPassword);
   private String testModelName = "some-model-name";
   private MultiValueMap<String, String> testPostRequest = new LinkedMultiValueMap<>();
   private String testExceptionMesage = "Some test message";
-
-  @Before
-  public void setUp() throws EngineBuildingException {
-    testPublishRequest = new PublishRequest();
-    testPublishRequest.setH2oCredentials(testH2oCredentials);
-    testPublishRequest.setModelName(testModelName);
-    testPublishRequest.setOrgGuid("some-org-guid");
-
-    testDownloadRequest = new DownloadRequest(testH2oCredentials, testModelName);
-
-  }
-
-  @Test
-  public void publish_callsPublisher() throws Exception {
-    // given
-    PublisherController controller =
-        new PublisherController(publisherMock, new DownloadRequestValidationRules());
-
-    // when
-    controller.publish(testPublishRequest);
-
-    // then
-    verify(publisherMock).publish(testPublishRequest);
-  }
 
   @Test
   public void downloadEngine_callsPublisher() throws Exception {
