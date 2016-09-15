@@ -35,27 +35,6 @@ public class HttpCommunicationTest {
   }
 
   @Test
-  public void simpleJsonRequest_createsProperRequest() throws Exception {
-    // when
-    HttpEntity<String> jsonRequest = HttpCommunication.simpleJsonRequest();
-
-    // then
-    assertThat(jsonRequest, is(equalTo(createExpectedSimpleJsonRequest())));
-  }
-
-  @Test
-  public void postRequest() throws Exception {
-    // given
-    String postBody = "klasjghakhg";
-
-    // when
-    HttpEntity<String> postRequest = HttpCommunication.postRequest(postBody);
-
-    // then
-    assertThat(postRequest, is(equalTo(createExpectedPostRequest(postBody))));
-  }
-
-  @Test
   public void basicAuthRequest() throws Exception {
     // when
     HttpEntity<String> request = HttpCommunication.basicAuthRequest(basicAuthToken);
@@ -75,31 +54,6 @@ public class HttpCommunicationTest {
 
   }
 
-  @Test
-  public void zipHeaders() throws Exception {
-    // when
-    HttpHeaders headers = HttpCommunication.zipHeaders();
-
-    // then
-    assertThat(headers, is(equalTo(createExpectedZipHeaders())));
-  }
-
-  private HttpEntity<String> createExpectedSimpleJsonRequest() {
-    HttpHeaders headers = new HttpHeaders();
-    headers.add("Accept", "application/json");
-    headers.add("Content-type", "application/json");
-
-    return new HttpEntity<>(headers);
-  }
-
-  private HttpEntity<String> createExpectedPostRequest(String body) {
-    HttpHeaders headers = new HttpHeaders();
-    headers.add("Accept", "application/json");
-    headers.add("Content-type", "application/x-www-form-urlencoded");
-
-    return new HttpEntity<>(body, headers);
-  }
-
   private HttpEntity<String> createExpectedBasicAuthRequest(String basicAuthToken) {
     HttpHeaders headers = new HttpHeaders();
     headers.add("Authorization", "Basic " + basicAuthToken);
@@ -113,13 +67,6 @@ public class HttpCommunicationTest {
     headers.add("Authorization", "Basic " + basicAuthToken);
 
     return headers;
-  }
-
-  private HttpHeaders createExpectedZipHeaders() {
-    HttpHeaders bitsHeaders = new HttpHeaders();
-    bitsHeaders.add("Content-type", "application/zip");
-
-    return bitsHeaders;
   }
 
 }

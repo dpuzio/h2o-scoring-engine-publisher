@@ -31,7 +31,6 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import org.trustedanalytics.h2oscoringengine.publisher.EngineBuildingException;
-import org.trustedanalytics.h2oscoringengine.publisher.EnginePublicationException;
 import org.trustedanalytics.h2oscoringengine.publisher.Publisher;
 import org.trustedanalytics.h2oscoringengine.publisher.http.BasicAuthServerCredentials;
 import org.trustedanalytics.h2oscoringengine.publisher.restapi.validation.DownloadRequestValidationRule;
@@ -56,22 +55,6 @@ public class PublisherController {
       DownloadRequestValidationRules downloadRequestValidationRules) {
     this.publisher = publisher;
     this.validationRules = downloadRequestValidationRules.get();
-  }
-
-  @ApiOperation(
-          value = "Publishes model as a service offering in Marketplace",
-          notes = "Privilege level: Any consumer of this endpoint must have a valid access token"
-  )
-  @ApiResponses(value = {
-          @ApiResponse(code = 200, message = "OK"),
-          @ApiResponse(code = 500, message = "Internal server error, e.g. error building or publishing model")
-  })
-  @RequestMapping(method = RequestMethod.POST, consumes = "application/json",
-      value = "/rest/h2o/engines")
-  public void publish(@Valid @RequestBody PublishRequest publishRequest)
-      throws EnginePublicationException, EngineBuildingException {
-    LOGGER.info("Got publish request: " + publishRequest);
-    publisher.publish(publishRequest);
   }
 
   @ApiOperation(
@@ -110,7 +93,7 @@ public class PublisherController {
     return e.getMessage();
   }
 
-  @ExceptionHandler({EngineBuildingException.class, EnginePublicationException.class})
+  @ExceptionHandler({EngineBuildingException.class})
   @ResponseStatus(value = HttpStatus.INTERNAL_SERVER_ERROR)
   @ResponseBody
   public String handleEngineBuildingException(Exception e) {

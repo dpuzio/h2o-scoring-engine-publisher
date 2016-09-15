@@ -21,48 +21,16 @@ import org.trustedanalytics.h2oscoringengine.publisher.filesystem.FsDirectoryOpe
 import org.trustedanalytics.h2oscoringengine.publisher.filesystem.PublisherWorkingDirectory;
 import org.trustedanalytics.h2oscoringengine.publisher.http.BasicAuthServerCredentials;
 import org.trustedanalytics.h2oscoringengine.publisher.http.FilesDownloader;
-import org.trustedanalytics.h2oscoringengine.publisher.restapi.PublishRequest;
-import org.trustedanalytics.h2oscoringengine.publisher.steps.AppRecordCreatingStep;
-import org.trustedanalytics.h2oscoringengine.publisher.steps.CheckingIfAppExistsStep;
 import org.trustedanalytics.h2oscoringengine.publisher.steps.H2oResourcesDownloadingStep;
 
 public class Publisher {
 
-  private final RestTemplate cfRestTemplate;
   private final RestTemplate h2oServerRestTemplate;
-  private final RestTemplate appBrokerRestTemplate;
-  private final String cfApiUrl;
-  private final BasicAuthServerCredentials appBrokerCredentials;
   private final String engineBaseResourcePath;
-  private final String technicalSpaceGuid;
 
-  public Publisher(CfConnectionData cfConnectionData, RestTemplate h2oServerRestTemplate,
-      AppBrokerConnectionData appBrokerConnectionData, String engineBaseJar)
-      throws EnginePublicationException {
-    this.cfRestTemplate = cfConnectionData.getCfRestTemplate();
-    this.cfApiUrl = cfConnectionData.getCfApiUrl();
-    this.appBrokerCredentials = appBrokerConnectionData.getAppBrokerCredentials();
+  public Publisher(RestTemplate h2oServerRestTemplate, String engineBaseJar) {
     this.engineBaseResourcePath = engineBaseJar;
     this.h2oServerRestTemplate = h2oServerRestTemplate;
-    this.appBrokerRestTemplate = appBrokerConnectionData.getAppBrokerRestTemplate();
-    this.technicalSpaceGuid = cfConnectionData.getTechnicalSpaceGuid();
-  }
-
-  public void publish(PublishRequest request)
-      throws EnginePublicationException, EngineBuildingException {
-
-    String appName = request.getModelName();
-    CheckingIfAppExistsStep appExistsStep = new CheckingIfAppExistsStep(cfApiUrl, cfRestTemplate);
-    if (appExistsStep.check(appName, technicalSpaceGuid)) {
-      throw new EnginePublicationException(
-          "Cannot publish app " + appName + " to CloudFoundry. App already exists.");
-    }
-
-    Path scoringEngineJar = buildScoringEngineJar(
-        new FilesDownloader(request.getH2oCredentials(), h2oServerRestTemplate),
-        request.getModelName());
-
-    publishToMarketplace(scoringEngineJar, appName, technicalSpaceGuid, request.getOrgGuid());
   }
 
   public Path getScoringEngineJar(BasicAuthServerCredentials h2oCredentials, String modelName)
@@ -88,17 +56,5 @@ public class Publisher {
     } catch (IOException e) {
       throw new EngineBuildingException("Unable to create dir for publisher: ", e);
     }
-  }
-
-  private void publishToMarketplace(Path appBits, String appName, String technicalSpaceGuid,
-      String orgGuid) throws EnginePublicationException {
-
-    AppRecordCreatingStep appRecordCreatingStep =
-        new AppRecordCreatingStep(cfApiUrl, cfRestTemplate);
-    appRecordCreatingStep.createAppRecord(technicalSpaceGuid, appName)
-        .createAppRoute(technicalSpaceGuid, appName).uploadBits(appBits)
-        .register(appBrokerCredentials, appBrokerRestTemplate, appName,
-            "Scoring engine based on H2O model")
-        .addServicePlanVisibility(orgGuid, appName);
   }
 }
