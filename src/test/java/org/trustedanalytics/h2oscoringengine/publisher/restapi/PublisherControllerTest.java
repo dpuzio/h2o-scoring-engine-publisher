@@ -51,8 +51,8 @@ public class PublisherControllerTest {
     // given
     PublisherController controller =
         new PublisherController(publisherMock, new DownloadRequestValidationRules());
-    testPostRequest.add("host", testHost);
-    testPostRequest.add("username", testUsername);
+    testPostRequest.add("hostname", testHost);
+    testPostRequest.add("login", testUsername);
     testPostRequest.add("password", testPassword);
     ArgumentCaptor<BasicAuthServerCredentials> credentialsCaptor =
         ArgumentCaptor.forClass(BasicAuthServerCredentials.class);

@@ -17,7 +17,7 @@ import org.springframework.util.MultiValueMap;
 
 public class UsernameValidationRule implements DownloadRequestValidationRule {
 
-  static final String USERNAME_KEY = "username";
+  static final String USERNAME_KEY = "login";
   private final FormDataValidator formDataValidator;
 
   public UsernameValidationRule(FormDataValidator formDataValidator) {

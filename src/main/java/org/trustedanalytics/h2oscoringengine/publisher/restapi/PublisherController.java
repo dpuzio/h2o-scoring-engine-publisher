@@ -77,7 +77,7 @@ public class PublisherController {
     validationRules.forEach(rule -> rule.validate(request));
 
     BasicAuthServerCredentials h2oServerCredentials = new BasicAuthServerCredentials(
-        request.get("host").get(0), request.get("username").get(0), request.get("password").get(0));
+        request.get("hostname").get(0), request.get("login").get(0), request.get("password").get(0));
 
     response.setHeader("Content-Disposition", String.format("attachment; filename=%s.jar", modelName));
 

@@ -18,7 +18,7 @@ import org.springframework.util.MultiValueMap;
 
 public class HostValidationRule implements DownloadRequestValidationRule {
 
-  static final String HOST_KEY = "host";
+  static final String HOST_KEY = "hostname";
   private final FormDataValidator formDataValidator;
 
   public HostValidationRule(FormDataValidator formDataValidator) {
