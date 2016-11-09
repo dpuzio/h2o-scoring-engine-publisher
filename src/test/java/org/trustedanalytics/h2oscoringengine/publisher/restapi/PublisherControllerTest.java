@@ -31,6 +31,7 @@ import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.trustedanalytics.h2oscoringengine.publisher.EngineBuildingException;
+import org.trustedanalytics.h2oscoringengine.publisher.EnginePublishingException;
 import org.trustedanalytics.h2oscoringengine.publisher.Publisher;
 import org.trustedanalytics.h2oscoringengine.publisher.http.BasicAuthServerCredentials;
 import org.trustedanalytics.h2oscoringengine.publisher.restapi.validation.DownloadRequestValidationRules;
@@ -45,6 +46,10 @@ public class PublisherControllerTest {
   private String testModelName = "some-model-name";
   private MultiValueMap<String, String> testPostRequest = new LinkedMultiValueMap<>();
   private String testExceptionMesage = "Some test message";
+
+  private String testModelId = "model-id";
+  private String testArtifactId = "artifact-id";
+  private String testScoringEngineName = "some-scoring-engine";
 
   @Test
   public void downloadEngine_callsPublisher() throws Exception {
@@ -69,6 +74,21 @@ public class PublisherControllerTest {
   }
 
   @Test
+  public void publishEngine_callsPublisher() throws EnginePublishingException {
+    // given
+    PublisherController sut =
+        new PublisherController(publisherMock, new DownloadRequestValidationRules());
+    PublishRequest testPublishRequest =
+        new PublishRequest(testModelId, testArtifactId, testScoringEngineName);
+
+    // when
+    sut.publishEngine(testPublishRequest);
+    
+    //then
+    verify(publisherMock).publishScoringEngine(testPublishRequest);
+  }
+
+  @Test
   public void handleIllegalArgumentException_returnsExceptionMessage() {
     // given
     PublisherController controller =
@@ -76,8 +96,7 @@ public class PublisherControllerTest {
 
     // when
     ValidationException testException = new ValidationException(new Exception(testExceptionMesage));
-    String message =
-        controller.handleIllegalArgumentException(testException);
+    String message = controller.handleIllegalArgumentException(testException);
 
     // then
     assertThat(message, is(equalTo(testException.getMessage())));
@@ -94,8 +113,7 @@ public class PublisherControllerTest {
     EngineBuildingException testException = new EngineBuildingException(testExceptionMesage);
     when(publisherMock.getScoringEngineJar(any(), any())).thenThrow(testException);
 
-    String message =
-        controller.handleEngineBuildingException(testException);
+    String message = controller.handleEngineBuildingException(testException);
 
     // then
     assertThat(message, is(equalTo(testException.getMessage())));
