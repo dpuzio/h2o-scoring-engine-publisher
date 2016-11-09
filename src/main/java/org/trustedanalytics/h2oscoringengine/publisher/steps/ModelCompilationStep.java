@@ -18,13 +18,11 @@ import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
-
 import javax.tools.DiagnosticCollector;
 import javax.tools.JavaCompiler;
 import javax.tools.JavaFileObject;
 import javax.tools.StandardJavaFileManager;
 import javax.tools.ToolProvider;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.trustedanalytics.h2oscoringengine.publisher.EngineBuildingException;

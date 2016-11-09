@@ -15,7 +15,6 @@ package org.trustedanalytics.h2oscoringengine.publisher.steps;
 
 import java.io.IOException;
 import java.nio.file.Path;
-
 import org.trustedanalytics.h2oscoringengine.publisher.EngineBuildingException;
 import org.trustedanalytics.h2oscoringengine.publisher.http.FilesDownloader;
 

@@ -14,7 +14,6 @@
 package org.trustedanalytics.h2oscoringengine.publisher;
 
 import javax.validation.constraints.NotNull;
-
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Bean;
@@ -37,9 +36,8 @@ public class ApplicationConfiguration {
       OAuth2RestTemplate tapApiServiceRestTemplate,
       @NotNull @Value("${tapApiService.url}") String tapApiServiceUrl) {
 
-    tapApiServiceUrl = getUrlWithHttpProtocol(tapApiServiceUrl);
-    return new Publisher(new RestTemplate(), tapApiServiceRestTemplate, tapApiServiceUrl,
-        engineBaseJarPath);
+    return new Publisher(new RestTemplate(), tapApiServiceRestTemplate,
+        getUrlWithHttpProtocol(tapApiServiceUrl), engineBaseJarPath);
   }
 
   @Bean

@@ -13,6 +13,7 @@
  */
 package org.trustedanalytics.h2oscoringengine.publisher.filesystem;
 
+import com.google.common.io.ByteStreams;
 import java.io.Closeable;
 import java.io.File;
 import java.io.FileOutputStream;
@@ -26,8 +27,6 @@ import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 import java.util.jar.JarOutputStream;
 import java.util.zip.CRC32;
-
-import com.google.common.io.ByteStreams;
 
 public class UpdatableJar implements Closeable {
 

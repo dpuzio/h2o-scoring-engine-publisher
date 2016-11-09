@@ -19,7 +19,6 @@ import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.jar.JarFile;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.trustedanalytics.h2oscoringengine.publisher.EngineBuildingException;

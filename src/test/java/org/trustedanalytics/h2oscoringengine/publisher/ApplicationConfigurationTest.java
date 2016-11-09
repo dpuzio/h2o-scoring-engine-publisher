@@ -13,15 +13,9 @@
  */
 package org.trustedanalytics.h2oscoringengine.publisher;
 
-import static org.junit.Assert.*;
-import static org.hamcrest.Matchers.*;
-import static org.mockito.Matchers.*;
-import static org.mockito.Mockito.*;
-
-import java.util.List;
+import static org.junit.Assert.assertEquals;
 
 import org.junit.Test;
-import org.springframework.security.oauth2.client.OAuth2RestTemplate;
 
 public class ApplicationConfigurationTest {
   

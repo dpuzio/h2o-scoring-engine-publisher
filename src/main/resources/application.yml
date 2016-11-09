@@ -13,5 +13,6 @@ logging:
   level:
     org.springframework.web: DEBUG
     org.springframework.security: DEBUG
+    org.trustedanalytics.h2oscoringengine: DEBUG
 
     

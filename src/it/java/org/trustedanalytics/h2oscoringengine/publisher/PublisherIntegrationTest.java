@@ -16,10 +16,12 @@ package org.trustedanalytics.h2oscoringengine.publisher;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.method;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.requestTo;
 import static org.springframework.test.web.client.response.MockRestResponseCreators.withSuccess;
+import static org.trustedanalytics.h2oscoringengine.publisher.tapapi.TestTapApiResponses.offeringCreated;
+import static org.trustedanalytics.h2oscoringengine.publisher.tapapi.TestTapApiResponses.oneOfferingString;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import java.io.IOException;
 import java.nio.file.Files;
-
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.http.HttpMethod;
@@ -27,9 +29,10 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.client.MockRestServiceServer;
 import org.springframework.web.client.RestTemplate;
 import org.trustedanalytics.h2oscoringengine.publisher.http.BasicAuthServerCredentials;
-import org.trustedanalytics.h2oscoringengine.publisher.restapi.PublishRequest;
-import org.trustedanalytics.h2oscoringengine.publisher.steps.EnsuringOfferingExistsStep;
+import org.trustedanalytics.h2oscoringengine.publisher.restapi.ScoringEngineData;
 import org.trustedanalytics.h2oscoringengine.publisher.steps.H2oResourcesDownloadingStep;
+import org.trustedanalytics.h2oscoringengine.publisher.tapapi.OfferingCreator;
+import org.trustedanalytics.h2oscoringengine.publisher.tapapi.OfferingsFetcher;
 
 
 public class PublisherIntegrationTest {
@@ -53,8 +56,8 @@ public class PublisherIntegrationTest {
   private final String getModelRequest =
       H2oResourcesDownloadingStep.H2O_SERVER_MODEL_PATH_PREFIX + testModelName;
   private final String getLibRequest = H2oResourcesDownloadingStep.H2O_SERVER_LIB_PATH;
-  private final String getOfferingsRequest =
-      EnsuringOfferingExistsStep.TAP_API_SERVICE_OFFERINGS_PATH;
+  private final String getOfferingsRequest = OfferingsFetcher.TAP_API_SERVICE_OFFERINGS_PATH;
+  private final String createOfferingRequest = OfferingCreator.TAP_API_SERVICE_CREATE_OFFERING_PATH;
 
   @Before
   public void setUp() {
@@ -82,10 +85,11 @@ public class PublisherIntegrationTest {
     Publisher sut = new Publisher(h2oRestTemplate, tapApiRestTemplate, testTapApiServiceUrl,
         engineBaseResourcePath);
     setTapApiServiceExpectedCalls();
-    
+
     // when
-    sut.publishScoringEngine(new PublishRequest("", "", ""));
-    
+    sut.publishScoringEngine(
+        new ScoringEngineData("some-model", "some-artifact", "some-scoring-engine"));
+
     // then
     tapApiServerMock.verify();
   }
@@ -111,9 +115,12 @@ public class PublisherIntegrationTest {
     return Files.readAllBytes(compilationResourcesBuilder.prepareLibraryFile());
   }
 
-  private void setTapApiServiceExpectedCalls() {
+  private void setTapApiServiceExpectedCalls() throws JsonProcessingException {
     tapApiServerMock.expect(requestTo(testTapApiServiceUrl + getOfferingsRequest))
         .andExpect(method(HttpMethod.GET))
-        .andRespond(withSuccess("", MediaType.APPLICATION_JSON));
+        .andRespond(withSuccess(oneOfferingString("", "", ""), MediaType.APPLICATION_JSON));
+    tapApiServerMock.expect(requestTo(testTapApiServiceUrl + createOfferingRequest))
+        .andExpect(method(HttpMethod.POST))
+        .andRespond(withSuccess(offeringCreated("some-offering-id"), MediaType.APPLICATION_JSON));
   }
 }

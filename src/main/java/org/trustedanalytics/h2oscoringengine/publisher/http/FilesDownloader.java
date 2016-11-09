@@ -16,7 +16,6 @@ package org.trustedanalytics.h2oscoringengine.publisher.http;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-
 import org.apache.commons.codec.binary.Base64;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

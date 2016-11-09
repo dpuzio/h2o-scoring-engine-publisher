@@ -13,11 +13,10 @@
  */
 package org.trustedanalytics.h2oscoringengine.publisher.http;
 
-import org.apache.commons.codec.binary.Base64;
-
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
+import org.apache.commons.codec.binary.Base64;
 
 @Getter
 @Setter

@@ -24,7 +24,6 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.nio.file.Paths;
-
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.springframework.mock.web.MockHttpServletResponse;
@@ -78,8 +77,8 @@ public class PublisherControllerTest {
     // given
     PublisherController sut =
         new PublisherController(publisherMock, new DownloadRequestValidationRules());
-    PublishRequest testPublishRequest =
-        new PublishRequest(testModelId, testArtifactId, testScoringEngineName);
+    ScoringEngineData testPublishRequest =
+        new ScoringEngineData(testModelId, testArtifactId, testScoringEngineName);
 
     // when
     sut.publishEngine(testPublishRequest);

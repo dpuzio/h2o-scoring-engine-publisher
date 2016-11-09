@@ -13,17 +13,19 @@
  */
 package org.trustedanalytics.h2oscoringengine.publisher;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import java.nio.file.Path;
-
 import org.springframework.web.client.RestTemplate;
 import org.trustedanalytics.h2oscoringengine.publisher.filesystem.FsDirectoryOperations;
 import org.trustedanalytics.h2oscoringengine.publisher.filesystem.PublisherWorkingDirectory;
 import org.trustedanalytics.h2oscoringengine.publisher.http.BasicAuthServerCredentials;
 import org.trustedanalytics.h2oscoringengine.publisher.http.FilesDownloader;
-import org.trustedanalytics.h2oscoringengine.publisher.restapi.PublishRequest;
-import org.trustedanalytics.h2oscoringengine.publisher.steps.EnsuringOfferingExistsStep;
+import org.trustedanalytics.h2oscoringengine.publisher.restapi.ScoringEngineData;
+import org.trustedanalytics.h2oscoringengine.publisher.steps.AssureOfferingPresenceStep;
 import org.trustedanalytics.h2oscoringengine.publisher.steps.H2oResourcesDownloadingStep;
+import org.trustedanalytics.h2oscoringengine.publisher.tapapi.OfferingCreator;
+import org.trustedanalytics.h2oscoringengine.publisher.tapapi.OfferingsFetcher;
 
 public class Publisher {
 
@@ -46,11 +48,12 @@ public class Publisher {
         modelName);
   }
 
-  public void publishScoringEngine(PublishRequest publishRequest) throws EnginePublishingException {
-    EnsuringOfferingExistsStep ensureOfferingExistsStep =
-        new EnsuringOfferingExistsStep(tapApiServiceRestTemplate, tapApiServiceUrl);
-    ensureOfferingExistsStep.ensureOfferingExists(publishRequest.getModelId(),
-        publishRequest.getArtifactId());
+  public void publishScoringEngine(ScoringEngineData scoringEngineData)
+      throws EnginePublishingException {
+    AssureOfferingPresenceStep assureOfferingPresenceStep = new AssureOfferingPresenceStep(
+        new OfferingsFetcher(tapApiServiceRestTemplate, tapApiServiceUrl),
+        new OfferingCreator(tapApiServiceRestTemplate, tapApiServiceUrl, new ObjectMapper()));
+    assureOfferingPresenceStep.ensureOfferingExists(scoringEngineData);
   }
 
   private Path buildScoringEngineJar(FilesDownloader h2oFilesDownloader, String modelName)

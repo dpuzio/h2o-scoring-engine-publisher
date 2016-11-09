@@ -16,6 +16,9 @@ package org.trustedanalytics.h2oscoringengine.publisher.restapi;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
+import java.util.List;
+import javax.servlet.http.HttpServletResponse;
+import javax.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -37,10 +40,6 @@ import org.trustedanalytics.h2oscoringengine.publisher.http.BasicAuthServerCrede
 import org.trustedanalytics.h2oscoringengine.publisher.restapi.validation.DownloadRequestValidationRule;
 import org.trustedanalytics.h2oscoringengine.publisher.restapi.validation.DownloadRequestValidationRules;
 import org.trustedanalytics.h2oscoringengine.publisher.restapi.validation.ValidationException;
-
-import javax.servlet.http.HttpServletResponse;
-import javax.validation.Valid;
-import java.util.List;
 
 
 @RestController
@@ -88,10 +87,10 @@ public class PublisherController {
   @ApiOperation(value = "Publishes given h2o artifact file as a scoring-engine instance.")
   @RequestMapping(method = RequestMethod.POST, consumes = "application/json",
       value = "/api/v1/scoring-engine/jar-scoring-engine")
-  public void publishEngine(@Valid @RequestBody PublishRequest publishRequest)
+  public void publishEngine(@Valid @RequestBody ScoringEngineData scoringEngineData)
       throws EnginePublishingException {
-    LOGGER.info("Got publish request: " + publishRequest);
-    publisher.publishScoringEngine(publishRequest);
+    LOGGER.info("Got publish request: " + scoringEngineData);
+    publisher.publishScoringEngine(scoringEngineData);
   }
 
   @ExceptionHandler(ValidationException.class)

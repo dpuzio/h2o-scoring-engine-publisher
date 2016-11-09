@@ -22,7 +22,6 @@ import static org.mockito.Mockito.when;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-
 import org.apache.commons.codec.binary.Base64;
 import org.junit.Before;
 import org.junit.Rule;

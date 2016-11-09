@@ -13,9 +13,8 @@
  */
 package org.trustedanalytics.h2oscoringengine.publisher.restapi.validation;
 
-import org.springframework.util.MultiValueMap;
-
 import com.google.common.base.Preconditions;
+import org.springframework.util.MultiValueMap;
 
 class FormDataValidator {
 

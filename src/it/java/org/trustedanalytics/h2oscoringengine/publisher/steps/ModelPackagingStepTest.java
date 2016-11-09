@@ -27,7 +27,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.jar.JarEntry;
 import java.util.jar.JarOutputStream;
-
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;

@@ -14,14 +14,12 @@ package org.trustedanalytics.h2oscoringengine.publisher.restapi;
  */
 
 import javax.validation.constraints.NotNull;
-
-import org.trustedanalytics.h2oscoringengine.publisher.http.BasicAuthServerCredentials;
-
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
+import org.trustedanalytics.h2oscoringengine.publisher.http.BasicAuthServerCredentials;
 
 
 @Getter
