@@ -21,22 +21,36 @@ import org.trustedanalytics.h2oscoringengine.publisher.filesystem.FsDirectoryOpe
 import org.trustedanalytics.h2oscoringengine.publisher.filesystem.PublisherWorkingDirectory;
 import org.trustedanalytics.h2oscoringengine.publisher.http.BasicAuthServerCredentials;
 import org.trustedanalytics.h2oscoringengine.publisher.http.FilesDownloader;
+import org.trustedanalytics.h2oscoringengine.publisher.restapi.PublishRequest;
+import org.trustedanalytics.h2oscoringengine.publisher.steps.EnsuringOfferingExistsStep;
 import org.trustedanalytics.h2oscoringengine.publisher.steps.H2oResourcesDownloadingStep;
 
 public class Publisher {
 
   private final RestTemplate h2oServerRestTemplate;
+  private final RestTemplate tapApiServiceRestTemplate;
+  private final String tapApiServiceUrl;
   private final String engineBaseResourcePath;
 
-  public Publisher(RestTemplate h2oServerRestTemplate, String engineBaseJar) {
+  public Publisher(RestTemplate h2oServerRestTemplate, RestTemplate tapApiServiceRestTemplate,
+      String tapApiServiceUrl, String engineBaseJar) {
     this.engineBaseResourcePath = engineBaseJar;
     this.h2oServerRestTemplate = h2oServerRestTemplate;
+    this.tapApiServiceRestTemplate = tapApiServiceRestTemplate;
+    this.tapApiServiceUrl = tapApiServiceUrl;
   }
 
   public Path getScoringEngineJar(BasicAuthServerCredentials h2oCredentials, String modelName)
       throws EngineBuildingException {
     return buildScoringEngineJar(new FilesDownloader(h2oCredentials, h2oServerRestTemplate),
         modelName);
+  }
+
+  public void publishScoringEngine(PublishRequest publishRequest) throws EnginePublishingException {
+    EnsuringOfferingExistsStep ensureOfferingExistsStep =
+        new EnsuringOfferingExistsStep(tapApiServiceRestTemplate, tapApiServiceUrl);
+    ensureOfferingExistsStep.ensureOfferingExists(publishRequest.getModelId(),
+        publishRequest.getArtifactId());
   }
 
   private Path buildScoringEngineJar(FilesDownloader h2oFilesDownloader, String modelName)

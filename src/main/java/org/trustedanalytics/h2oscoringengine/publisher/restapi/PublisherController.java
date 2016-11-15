@@ -31,6 +31,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import org.trustedanalytics.h2oscoringengine.publisher.EngineBuildingException;
+import org.trustedanalytics.h2oscoringengine.publisher.EnginePublishingException;
 import org.trustedanalytics.h2oscoringengine.publisher.Publisher;
 import org.trustedanalytics.h2oscoringengine.publisher.http.BasicAuthServerCredentials;
 import org.trustedanalytics.h2oscoringengine.publisher.restapi.validation.DownloadRequestValidationRule;
@@ -57,15 +58,12 @@ public class PublisherController {
     this.validationRules = downloadRequestValidationRules.get();
   }
 
-  @ApiOperation(
-          value = "Exposes H2O scoring engine model for download as JAR file",
-          notes = "Privilege level: Any consumer of this endpoint must have a valid access token"
-  )
-  @ApiResponses(value = {
-          @ApiResponse(code = 200, message = "OK", response = FileSystemResource.class),
-          @ApiResponse(code = 400, message = "Request was malformed"),
-          @ApiResponse(code = 500, message = "Internal server error, e.g. error building or publishing model")
-  })
+  @ApiOperation(value = "Exposes H2O scoring engine model for download as JAR file",
+      notes = "Privilege level: Any consumer of this endpoint must have a valid access token")
+  @ApiResponses(
+      value = {@ApiResponse(code = 200, message = "OK", response = FileSystemResource.class),
+          @ApiResponse(code = 400, message = "Request was malformed"), @ApiResponse(code = 500,
+              message = "Internal server error, e.g. error building or publishing model")})
   @RequestMapping(method = RequestMethod.POST, consumes = "application/x-www-form-urlencoded",
       value = "/rest/h2o/engines/{modelName}/downloads", produces = "application/java-archive")
   @ResponseBody
@@ -76,13 +74,24 @@ public class PublisherController {
     LOGGER.info("Got download request: " + request + " modelName:" + modelName);
     validationRules.forEach(rule -> rule.validate(request));
 
-    BasicAuthServerCredentials h2oServerCredentials = new BasicAuthServerCredentials(
-        request.get("hostname").get(0), request.get("login").get(0), request.get("password").get(0));
+    BasicAuthServerCredentials h2oServerCredentials =
+        new BasicAuthServerCredentials(request.get("hostname").get(0), request.get("login").get(0),
+            request.get("password").get(0));
 
-    response.setHeader("Content-Disposition", String.format("attachment; filename=%s.jar", modelName));
+    response.setHeader("Content-Disposition",
+        String.format("attachment; filename=%s.jar", modelName));
 
     return new FileSystemResource(
         publisher.getScoringEngineJar(h2oServerCredentials, modelName).toFile());
+  }
+
+  @ApiOperation(value = "Publishes given h2o artifact file as a scoring-engine instance.")
+  @RequestMapping(method = RequestMethod.POST, consumes = "application/json",
+      value = "/api/v1/scoring-engine/jar-scoring-engine")
+  public void publishEngine(@Valid @RequestBody PublishRequest publishRequest)
+      throws EnginePublishingException {
+    LOGGER.info("Got publish request: " + publishRequest);
+    publisher.publishScoringEngine(publishRequest);
   }
 
   @ExceptionHandler(ValidationException.class)
