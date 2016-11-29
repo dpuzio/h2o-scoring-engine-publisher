@@ -13,17 +13,15 @@
  */
 package org.trustedanalytics.h2oscoringengine.publisher.tapapi;
 
-import static org.junit.Assert.assertEquals;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
-import static org.trustedanalytics.h2oscoringengine.publisher.tapapi.OfferingCreator
-    .TAP_API_SERVICE_CREATE_OFFERING_PATH;
-import static org.trustedanalytics.h2oscoringengine.publisher.tapapi.TestTapApiResponses
-    .offeringCreated;
+import static org.trustedanalytics.h2oscoringengine.publisher.tapapi.ServiceCreator
+    .TAP_API_SERVICE_CREATE_SERVICE_INSTANCE_PATH;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import java.io.IOException;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -34,10 +32,18 @@ import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.RestTemplate;
 import org.trustedanalytics.h2oscoringengine.publisher.restapi.ScoringEngineData;
 
-public class OfferingCreatorTest {
+public class ServiceCreatorTest {
 
   private final RestTemplate tapApiRestTemplateMock = mock(RestTemplate.class);
   private final String tapApiTestUrl = "http://tap-api";
+  private final ObjectMapper jsonMapper = new ObjectMapper();
+
+  private final String testName = "sample-instance";
+  private final String testOfferingId = "offering-1";
+  private final String testPlanId = "plan-1";
+  private final String testModelId = "model-1";
+  private final String testArtifactId = "artifact-1";
+
   private final ScoringEngineData testScoringEngineData =
       new ScoringEngineData("some-model-id", "some-artifact-od", "some-model-name");
   private final byte[] testEngineBytes = "some-string".getBytes();
@@ -46,57 +52,36 @@ public class OfferingCreatorTest {
   public final ExpectedException thrown = ExpectedException.none();
 
   @Test
-  public void createJavaScoringEngineOffering_TapApiCreatedOffering_OfferingIdReturned()
+  public void createServiceInstance_TapApiCreatedServiceInstance_NoError()
       throws Exception {
     // given
-    String expectedOfferingId = "some-id";
-    when(tapApiRestTemplateMock.exchange(eq(tapApiTestUrl + TAP_API_SERVICE_CREATE_OFFERING_PATH),
+    when(tapApiRestTemplateMock.exchange(eq(tapApiTestUrl + TAP_API_SERVICE_CREATE_SERVICE_INSTANCE_PATH),
         eq(HttpMethod.POST), any(), eq(String.class))).thenReturn(
-            new ResponseEntity<String>(offeringCreated(expectedOfferingId), HttpStatus.OK));
+            new ResponseEntity<String>("{}", HttpStatus.OK));
 
-    OfferingCreator sut =
-        new OfferingCreator(tapApiRestTemplateMock, tapApiTestUrl, new ObjectMapper());
-
-    // when
-    OfferingData actualOffering =
-        sut.createJavaScoringEngineOffering(testScoringEngineData, testEngineBytes);
-
-    // then
-    assertEquals(expectedOfferingId, actualOffering.getOfferingId());
-  }
-
-  @Test
-  public void createJavaScoringEngineOffering_TapApiReturnedUnparsableJson_ExceptionOccured()
-      throws Exception {
-    // given
-    when(tapApiRestTemplateMock.exchange(eq(tapApiTestUrl + TAP_API_SERVICE_CREATE_OFFERING_PATH),
-        eq(HttpMethod.POST), any(), eq(String.class)))
-            .thenReturn(new ResponseEntity<String>("not-a-json", HttpStatus.OK));
-
-    OfferingCreator sut =
-        new OfferingCreator(tapApiRestTemplateMock, tapApiTestUrl, new ObjectMapper());
+    ServiceCreator sut =
+        new ServiceCreator(tapApiRestTemplateMock, tapApiTestUrl, new ObjectMapper());
 
     // when
     // then
-    thrown.expect(OfferingCreationException.class);
-    sut.createJavaScoringEngineOffering(testScoringEngineData, testEngineBytes);
+    sut.createServiceInstance(testName, testOfferingId, testPlanId, testModelId, testArtifactId);
   }
 
   @Test
-  public void createJavaScoringEngine_TapApiRespondedWithError_ExceptionThrown() throws Exception {
+  public void createServiceInstance_TapApiRespondedWithError_ExceptionThrown() throws Exception {
     // given
-    OfferingCreator sut =
-        new OfferingCreator(tapApiRestTemplateMock, tapApiTestUrl, new ObjectMapper());
+    ServiceCreator sut =
+        new ServiceCreator(tapApiRestTemplateMock, tapApiTestUrl, new ObjectMapper());
 
     String tapApiErrorMsg = "Some error message from tap-api-service";
     when(tapApiRestTemplateMock.exchange(
-        eq(tapApiTestUrl + TAP_API_SERVICE_CREATE_OFFERING_PATH),
+        eq(tapApiTestUrl + TAP_API_SERVICE_CREATE_SERVICE_INSTANCE_PATH),
         eq(HttpMethod.POST), any(), eq(String.class)))
             .thenThrow(new HttpServerErrorException(HttpStatus.INTERNAL_SERVER_ERROR, tapApiErrorMsg));
 
     // when
     // then
-    thrown.expect(OfferingCreationException.class);
-    sut.createJavaScoringEngineOffering(testScoringEngineData, testEngineBytes);
+    thrown.expect(IOException.class);
+    sut.createServiceInstance(testName, testOfferingId, testPlanId, testModelId, testArtifactId);
   }
 }

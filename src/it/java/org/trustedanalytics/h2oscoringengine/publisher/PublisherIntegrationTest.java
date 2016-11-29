@@ -17,6 +17,9 @@ import static org.springframework.test.web.client.match.MockRestRequestMatchers.
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.requestTo;
 import static org.springframework.test.web.client.response.MockRestResponseCreators.withSuccess;
 import static org.trustedanalytics.h2oscoringengine.publisher.tapapi.TestTapApiResponses.offeringCreated;
+
+import static org.trustedanalytics.h2oscoringengine.publisher.tapapi.TestTapApiResponses
+    .offeringReady;
 import static org.trustedanalytics.h2oscoringengine.publisher.tapapi.TestTapApiResponses.oneOfferingString;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -33,6 +36,7 @@ import org.trustedanalytics.h2oscoringengine.publisher.restapi.ScoringEngineData
 import org.trustedanalytics.h2oscoringengine.publisher.steps.H2oResourcesDownloadingStep;
 import org.trustedanalytics.h2oscoringengine.publisher.tapapi.OfferingCreator;
 import org.trustedanalytics.h2oscoringengine.publisher.tapapi.OfferingsFetcher;
+import org.trustedanalytics.h2oscoringengine.publisher.tapapi.ServiceCreator;
 
 
 public class PublisherIntegrationTest {
@@ -58,6 +62,7 @@ public class PublisherIntegrationTest {
   private final String getLibRequest = H2oResourcesDownloadingStep.H2O_SERVER_LIB_PATH;
   private final String getOfferingsRequest = OfferingsFetcher.TAP_API_SERVICE_OFFERINGS_PATH;
   private final String createOfferingRequest = OfferingCreator.TAP_API_SERVICE_CREATE_OFFERING_PATH;
+  private final String createServiceInstanceRequest = ServiceCreator.TAP_API_SERVICE_CREATE_SERVICE_INSTANCE_PATH;
 
   @Before
   public void setUp() {
@@ -120,6 +125,13 @@ public class PublisherIntegrationTest {
         .andExpect(method(HttpMethod.GET))
         .andRespond(withSuccess(oneOfferingString("", "", ""), MediaType.APPLICATION_JSON));
     tapApiServerMock.expect(requestTo(testTapApiServiceUrl + createOfferingRequest))
+        .andExpect(method(HttpMethod.POST))
+        .andRespond(withSuccess(offeringCreated("some-offering-id"), MediaType.APPLICATION_JSON));
+    tapApiServerMock.expect(requestTo(
+            testTapApiServiceUrl + OfferingsFetcher.pathForOffering("some-offering-id")))
+        .andExpect(method(HttpMethod.GET))
+        .andRespond(withSuccess(offeringReady(), MediaType.APPLICATION_JSON));
+    tapApiServerMock.expect(requestTo(testTapApiServiceUrl + createServiceInstanceRequest))
         .andExpect(method(HttpMethod.POST))
         .andRespond(withSuccess(offeringCreated("some-offering-id"), MediaType.APPLICATION_JSON));
   }

@@ -34,17 +34,26 @@ public class AssureOfferingPresenceStep {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(AssureOfferingPresenceStep.class);
 
-  private OfferingCreator offeringCreator;
-  private OfferingsFetcher offeringsFetcher;
+  private final AssureOfferingPresenceStepConfig config;
+  private final OfferingCreator offeringCreator;
+  private final OfferingsFetcher offeringsFetcher;
 
-
-  public AssureOfferingPresenceStep(OfferingsFetcher offeringsFetcher,
+  public AssureOfferingPresenceStep(
+      OfferingsFetcher offeringsFetcher,
       OfferingCreator offeringCreator) {
+    this(AssureOfferingPresenceStepConfig.defaultConfig(), offeringsFetcher, offeringCreator);
+  }
+
+  public AssureOfferingPresenceStep(
+      AssureOfferingPresenceStepConfig config,
+      OfferingsFetcher offeringsFetcher,
+      OfferingCreator offeringCreator) {
+    this.config = config;
     this.offeringsFetcher = offeringsFetcher;
     this.offeringCreator = offeringCreator;
   }
 
-  public OfferingData ensureOfferingExists(ScoringEngineData scoringEngineData)
+  public OfferingInstanceCreationStep ensureOfferingExists(ScoringEngineData scoringEngineData)
       throws EnginePublishingException {
 
     List<JsonNode> modelOfferings = fetchModelOfferings(scoringEngineData);
@@ -55,6 +64,8 @@ public class AssureOfferingPresenceStep {
       try {
         modelOffering =
             offeringCreator.createJavaScoringEngineOffering(scoringEngineData, scoringEngineJar);
+        waitUntilOfferingIsReady(modelOffering.getOfferingId());
+
         LOGGER.info("Created offering: " + modelOffering);
       } catch (OfferingCreationException e) {
         throw new EnginePublishingException("Unable to create scoring engine offering: ", e);
@@ -65,8 +76,10 @@ public class AssureOfferingPresenceStep {
       throw new EnginePublishingException("Unable to return model offering. Found "
           + modelOfferings.size() + "offerings for model " + scoringEngineData.getModelId());
     }
+
     LOGGER.debug("Model offering " + modelOffering);
-    return modelOffering;
+
+    return new OfferingInstanceCreationStep(modelOffering.getOfferingId(), modelOffering.getPlanId());
   }
 
   private List<JsonNode> fetchModelOfferings(ScoringEngineData scoringEngineData)
@@ -107,5 +120,25 @@ public class AssureOfferingPresenceStep {
     String planId = modelOffering.at("/entity/service_plans/0/metadata/guid").textValue();
 
     return new OfferingData(offeringId, planId);
+  }
+
+  private void waitUntilOfferingIsReady(String offeringId) throws OfferingCreationException {
+    for (int i = 0; i < config.getRetryCount(); i++) {
+      try {
+        JsonNode offeringJson = offeringsFetcher.fetchModelOffering(offeringId);
+        String offeringState = offeringJson.at("/entity/state").textValue();
+        LOGGER.info("Offering {} state: {}", offeringId, offeringState);
+        if (offeringState.equalsIgnoreCase(config.getDesiredState())) {
+          LOGGER.info("Check OK!");
+          return;
+        }
+        LOGGER.info("Check failed.");
+        Thread.sleep(config.getRetryIntervalMs());
+      } catch (Exception e) {
+        LOGGER.error("Error when checking offering state, will retry in a while.", e);
+      }
+    }
+
+    throw new OfferingCreationException("Problem with creating offering (not running)");
   }
 }

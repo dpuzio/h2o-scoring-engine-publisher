@@ -15,16 +15,20 @@
 package org.trustedanalytics.h2oscoringengine.publisher.steps;
 
 import static org.hamcrest.Matchers.containsString;
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.mockito.Mockito.when;
-import static org.mockito.Mockito.*;
-import static org.trustedanalytics.h2oscoringengine.publisher.tapapi.TestTapApiResponses.oneOfferingJson;
-import static org.trustedanalytics.h2oscoringengine.publisher.tapapi.TestTapApiResponses.twoOfferingsJson;
+import static org.trustedanalytics.h2oscoringengine.publisher.tapapi.TestTapApiResponses
+    .oneOfferingJson;
+import static org.trustedanalytics.h2oscoringengine.publisher.tapapi.TestTapApiResponses
+    .twoOfferingsJson;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import java.io.IOException;
 import java.util.Arrays;
 import org.junit.Rule;
@@ -41,8 +45,10 @@ public class AssureOfferingPresenceStepTest {
 
   private final OfferingsFetcher offeringsFetcherMock = mock(OfferingsFetcher.class);
   private final OfferingCreator offeringCreatorMock = mock(OfferingCreator.class);
+  private final AssureOfferingPresenceStepConfig config =
+      new AssureOfferingPresenceStepConfig(1, 0, "READY");
   private final AssureOfferingPresenceStep sut =
-      new AssureOfferingPresenceStep(offeringsFetcherMock, offeringCreatorMock);
+      new AssureOfferingPresenceStep(config, offeringsFetcherMock, offeringCreatorMock);
 
   private final String testModelId = "some-model-id";
   private final String testArtifactId = "some-artifact-id";
@@ -56,35 +62,40 @@ public class AssureOfferingPresenceStepTest {
   public final ExpectedException thrown = ExpectedException.none();
 
   @Test
-  public void ensureOfferingExists_OfferingsFetcherReturnedOneOffering_OfferingIdReturned()
+  public void ensureOfferingExists_OfferingsFetcherReturnedOneOffering_NextStepReturned()
       throws Exception {
     // given
     when(offeringsFetcherMock.fetchModelOfferings(testModelId, testArtifactId))
         .thenReturn(oneOfferingJson(testModelId, testArtifactId, testOfferingId));
 
     // when
-    OfferingData actualOffering = sut.ensureOfferingExists(testScoringEngineData);
+    OfferingInstanceCreationStep nextStep = sut.ensureOfferingExists(testScoringEngineData);
 
     // then
-    assertEquals(testOfferingId, actualOffering.getOfferingId());
+    assertNotNull(nextStep);
     verifyZeroInteractions(offeringCreatorMock);
   }
 
   @Test
-  public void ensureOfferingExist_OfferingsFetcherReturnedNoOfferings_OfferingCreatedAndReturned()
+  public void ensureOfferingExist_OfferingsFetcherReturnedNoOfferings_OfferingCreatedAndNextStepReturned()
       throws Exception {
     // given
     when(offeringsFetcherMock.fetchModelOfferings(eq(testModelId), eq(testArtifactId)))
         .thenReturn(Arrays.asList());
     when(offeringCreatorMock.createJavaScoringEngineOffering(any(), any()))
         .thenReturn(testOffering);
+    ObjectMapper mapper = new ObjectMapper();
+    ObjectNode offeringInfo = mapper.createObjectNode();
+    offeringInfo.putObject("entity").put("state", "READY");
+    when(offeringsFetcherMock.fetchModelOffering(eq(testOfferingId)))
+        .thenReturn(offeringInfo);
 
     // when
-    OfferingData actualOffering = sut.ensureOfferingExists(testScoringEngineData);
+    OfferingInstanceCreationStep nextStep = sut.ensureOfferingExists(testScoringEngineData);
 
     // then
+    assertNotNull(nextStep);
     verify(offeringCreatorMock).createJavaScoringEngineOffering(any(), any());
-    assertEquals(testOfferingId, actualOffering.getOfferingId());
   }
 
   @Test
@@ -129,5 +140,26 @@ public class AssureOfferingPresenceStepTest {
     thrown.expect(EnginePublishingException.class);
     thrown.expectMessage(containsString("Unable to create scoring engine offering"));
     sut.ensureOfferingExists(testScoringEngineData);
+  }
+
+  @Test
+  public void ensureOfferingExists_OfferingCreatedButNotReady_ExceptionThrown()
+      throws Exception {
+    // given
+    when(offeringsFetcherMock.fetchModelOfferings(eq(testModelId), eq(testArtifactId)))
+        .thenReturn(Arrays.asList());
+    when(offeringCreatorMock.createJavaScoringEngineOffering(any(), any()))
+        .thenReturn(testOffering);
+    ObjectMapper mapper = new ObjectMapper();
+    ObjectNode offeringInfo = mapper.createObjectNode();
+    offeringInfo.putObject("entity").put("state", "DEPLOYING");
+    when(offeringsFetcherMock.fetchModelOffering(eq(testOfferingId)))
+        .thenReturn(offeringInfo);
+
+    // when
+    // then
+    thrown.expect(EnginePublishingException.class);
+    thrown.expectMessage(containsString("Unable to create scoring engine offering"));
+    OfferingInstanceCreationStep nextStep = sut.ensureOfferingExists(testScoringEngineData);
   }
 }

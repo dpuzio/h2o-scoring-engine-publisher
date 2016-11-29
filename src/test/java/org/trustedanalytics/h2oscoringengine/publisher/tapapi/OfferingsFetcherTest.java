@@ -20,11 +20,17 @@ import static org.junit.Assert.assertThat;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
-import static org.trustedanalytics.h2oscoringengine.publisher.tapapi.OfferingsFetcher.TAP_API_SERVICE_OFFERINGS_PATH;
-import static org.trustedanalytics.h2oscoringengine.publisher.tapapi.TestTapApiResponses.oneOfferingJson;
-import static org.trustedanalytics.h2oscoringengine.publisher.tapapi.TestTapApiResponses.oneOfferingString;
+import static org.trustedanalytics.h2oscoringengine.publisher.tapapi.OfferingsFetcher
+    .TAP_API_SERVICE_OFFERINGS_PATH;
+import static org.trustedanalytics.h2oscoringengine.publisher.tapapi.TestTapApiResponses
+    .offeringReady;
+import static org.trustedanalytics.h2oscoringengine.publisher.tapapi.TestTapApiResponses
+    .oneOfferingJson;
+import static org.trustedanalytics.h2oscoringengine.publisher.tapapi.TestTapApiResponses
+    .oneOfferingString;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import java.util.List;
 import org.junit.Before;
@@ -42,11 +48,13 @@ public class OfferingsFetcherTest {
 
   private final String testModelId = "model-test-1";
   private final String testArtifactId = "artifact-test-1";
+  private final String testOfferingId = "offering-test-1";
   private final String testTapApiUrl = "http://tap-api";
   private List<JsonNode> jsonWithOneOffering;
 
-  RestTemplate restTemplateMock = mock(RestTemplate.class);
-  ResponseEntity<String> responseMock = mock(ResponseEntity.class);
+  private RestTemplate restTemplateMock = mock(RestTemplate.class);
+  private ResponseEntity<String> responseMock = mock(ResponseEntity.class);
+  private ObjectMapper jsonMapper = new ObjectMapper();
 
   @Rule
   public final ExpectedException thrown = ExpectedException.none();
@@ -58,12 +66,16 @@ public class OfferingsFetcherTest {
     when(restTemplateMock.exchange(eq(testTapApiUrl + TAP_API_SERVICE_OFFERINGS_PATH),
         eq(HttpMethod.GET), eq(new HttpEntity<>(new HttpHeaders())), eq(String.class)))
             .thenReturn(responseMock);
+    when(restTemplateMock.exchange(
+        eq(testTapApiUrl + OfferingsFetcher.pathForOffering(testOfferingId)),
+        eq(HttpMethod.GET), eq(new HttpEntity<>(new HttpHeaders())), eq(String.class)))
+        .thenReturn(responseMock);
   }
 
   @Test
   public void fetchModelOfferings_oneOfferingFromTapApi_offeringNodeReturned() throws Exception {
     // given
-    OfferingsFetcher sut = new OfferingsFetcher(restTemplateMock, testTapApiUrl);
+    OfferingsFetcher sut = new OfferingsFetcher(restTemplateMock, testTapApiUrl, jsonMapper);
     when(responseMock.getBody())
         .thenReturn(oneOfferingString(testModelId, testArtifactId, "some-offering-id"));
     when(responseMock.getStatusCode()).thenReturn(HttpStatus.OK);
@@ -78,7 +90,7 @@ public class OfferingsFetcherTest {
   @Test
   public void fetchModelOfferings_InvalidJsonFromTapApi_ExceptionThrown() throws Exception {
     // given
-    OfferingsFetcher sut = new OfferingsFetcher(restTemplateMock, testTapApiUrl);
+    OfferingsFetcher sut = new OfferingsFetcher(restTemplateMock, testTapApiUrl, jsonMapper);
     when(responseMock.getBody()).thenReturn("{\"some-key\":\"some-value\"}");
     when(responseMock.getStatusCode()).thenReturn(HttpStatus.OK);
 
@@ -92,9 +104,9 @@ public class OfferingsFetcherTest {
   public void fetchModelOfferings_offeringForDifferentModelFromTapApi_EmpytListReturned()
       throws Exception {
     // given
-    OfferingsFetcher sut = new OfferingsFetcher(restTemplateMock, testTapApiUrl);
+    OfferingsFetcher sut = new OfferingsFetcher(restTemplateMock, testTapApiUrl, jsonMapper);
     when(responseMock.getBody())
-        .thenReturn(oneOfferingString("some-model-id", testArtifactId, "some-offering-id"));
+        .thenReturn(oneOfferingString("some-model-id", testArtifactId, testOfferingId));
     when(responseMock.getStatusCode()).thenReturn(HttpStatus.OK);
 
     // when
@@ -108,9 +120,9 @@ public class OfferingsFetcherTest {
   public void fetchModelOfferings_offeringForDifferentArtifactFromTapApi_EmpytListReturned()
       throws Exception {
     // given
-    OfferingsFetcher sut = new OfferingsFetcher(restTemplateMock, testTapApiUrl);
+    OfferingsFetcher sut = new OfferingsFetcher(restTemplateMock, testTapApiUrl, jsonMapper);
     when(responseMock.getBody())
-        .thenReturn(oneOfferingString(testModelId, "some-artifact-id", "some-offering-id"));
+        .thenReturn(oneOfferingString(testModelId, "some-artifact-id", testOfferingId));
     when(responseMock.getStatusCode()).thenReturn(HttpStatus.OK);
 
     // when
@@ -124,7 +136,7 @@ public class OfferingsFetcherTest {
   public void fetchModelOfferings_tapApiRespondedWithError_ResponseBodyInExceptionMessage()
       throws Exception {
     // given
-    OfferingsFetcher sut = new OfferingsFetcher(restTemplateMock, testTapApiUrl);
+    OfferingsFetcher sut = new OfferingsFetcher(restTemplateMock, testTapApiUrl, jsonMapper);
     String testErrorMsg = "Some error message from tap-api-service";
     when(responseMock.getBody()).thenReturn(testErrorMsg);
     when(responseMock.getStatusCode()).thenReturn(HttpStatus.INTERNAL_SERVER_ERROR);
@@ -136,12 +148,11 @@ public class OfferingsFetcherTest {
     sut.fetchModelOfferings(testModelId, testArtifactId);
   }
 
-
   @Test
-  public void fetchModelOffering_tapApiReturnedInvalidModelNode_EmptyListReturned()
+  public void fetchModelOfferings_tapApiReturnedInvalidModelNode_EmptyListReturned()
       throws Exception {
     // given
-    OfferingsFetcher sut = new OfferingsFetcher(restTemplateMock, testTapApiUrl);
+    OfferingsFetcher sut = new OfferingsFetcher(restTemplateMock, testTapApiUrl, jsonMapper);
     when(responseMock.getBody()).thenReturn(prepareJsonWithoutModelNode());
     when(responseMock.getStatusCode()).thenReturn(HttpStatus.OK);
 
@@ -153,10 +164,10 @@ public class OfferingsFetcherTest {
   }
 
   @Test
-  public void fetchModelOffering_tapApiReturnedInvalidArtifactNode_EmptyListReturned()
+  public void fetchModelOfferings_tapApiReturnedInvalidArtifactNode_EmptyListReturned()
       throws Exception {
     // given
-    OfferingsFetcher sut = new OfferingsFetcher(restTemplateMock, testTapApiUrl);
+    OfferingsFetcher sut = new OfferingsFetcher(restTemplateMock, testTapApiUrl, jsonMapper);
     when(responseMock.getBody()).thenReturn(prepareJsonWithoutArtifactNode());
     when(responseMock.getStatusCode()).thenReturn(HttpStatus.OK);
 
@@ -168,10 +179,10 @@ public class OfferingsFetcherTest {
   }
   
   @Test
-  public void fetchModelOffering_tapApiReturnedInvalidMetadataNode_EmptyListReturned()
+  public void fetchModelOfferings_tapApiReturnedInvalidMetadataNode_EmptyListReturned()
       throws Exception {
     // given
-    OfferingsFetcher sut = new OfferingsFetcher(restTemplateMock, testTapApiUrl);
+    OfferingsFetcher sut = new OfferingsFetcher(restTemplateMock, testTapApiUrl, jsonMapper);
     when(responseMock.getBody()).thenReturn(prepareJsonWithInvalidMetadataNodes());
     when(responseMock.getStatusCode()).thenReturn(HttpStatus.OK);
 
@@ -180,6 +191,50 @@ public class OfferingsFetcherTest {
 
     // then
     assertThat(actualOfferings, empty());
+  }
+
+  @Test
+  public void fetchModelOffering_oneOfferingFromTapApi_offeringNodeReturned() throws Exception {
+    // given
+    OfferingsFetcher sut = new OfferingsFetcher(restTemplateMock, testTapApiUrl, jsonMapper);
+    when(responseMock.getBody())
+        .thenReturn(offeringReady());
+    when(responseMock.getStatusCode()).thenReturn(HttpStatus.OK);
+
+    // when
+    JsonNode actualJson = sut.fetchModelOffering(testOfferingId);
+
+    // then
+    assertEquals("READY", actualJson.at("/entity/state").textValue());
+  }
+
+  @Test
+  public void fetchModelOffering_InvalidJsonFromTapApi_ExceptionThrown() throws Exception {
+    // given
+    OfferingsFetcher sut = new OfferingsFetcher(restTemplateMock, testTapApiUrl, jsonMapper);
+    when(responseMock.getBody()).thenReturn("{[\"bad_json_structure\"");
+    when(responseMock.getStatusCode()).thenReturn(HttpStatus.OK);
+
+    // when
+    // then
+    thrown.expect(IOException.class);
+    sut.fetchModelOffering(testOfferingId);
+  }
+
+  @Test
+  public void fetchModelOffering_tapApiRespondedWithError_ResponseBodyInExceptionMessage()
+      throws Exception {
+    // given
+    OfferingsFetcher sut = new OfferingsFetcher(restTemplateMock, testTapApiUrl, jsonMapper);
+    String testErrorMsg = "Some error message from tap-api-service";
+    when(responseMock.getBody()).thenReturn(testErrorMsg);
+    when(responseMock.getStatusCode()).thenReturn(HttpStatus.INTERNAL_SERVER_ERROR);
+
+    // when
+    // then
+    thrown.expect(IOException.class);
+    thrown.expectMessage(containsString(testErrorMsg));
+    sut.fetchModelOffering(testOfferingId);
   }
 
   private String prepareJsonWithoutArtifactNode() {

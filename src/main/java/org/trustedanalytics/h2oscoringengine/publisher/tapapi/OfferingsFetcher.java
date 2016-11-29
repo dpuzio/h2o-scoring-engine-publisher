@@ -25,7 +25,7 @@ import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.client.HttpServerErrorException;
+import org.springframework.web.client.HttpStatusCodeException;
 import org.springframework.web.client.RestTemplate;
 
 public class OfferingsFetcher {
@@ -36,10 +36,39 @@ public class OfferingsFetcher {
 
   private final RestTemplate tapApiRestTemplate;
   private final String tapApiUrl;
+  private final ObjectMapper jsonMapper;
 
-  public OfferingsFetcher(RestTemplate tapApiRestTemplate, String tapApiUrl) {
+  public OfferingsFetcher(
+      RestTemplate tapApiRestTemplate, String tapApiUrl, ObjectMapper jsonMapper) {
     this.tapApiRestTemplate = tapApiRestTemplate;
     this.tapApiUrl = tapApiUrl;
+    this.jsonMapper = jsonMapper;
+  }
+
+  public static String pathForOffering(String offeringId) {
+    return TAP_API_SERVICE_OFFERINGS_PATH + "/" + offeringId;
+  }
+
+  public JsonNode fetchModelOffering(String offeringId) throws IOException {
+    LOGGER.debug("Fetching offering from tap-api-service: " + offeringId);
+    try {
+      ResponseEntity<String> responseEntity =
+          tapApiRestTemplate.exchange(
+              tapApiUrl + pathForOffering(offeringId),
+              HttpMethod.GET,
+              new HttpEntity<>(new HttpHeaders()), String.class);
+      JsonNode offeringJson = jsonMapper.readTree(responseEntity.getBody());
+      if (!offeringJson.isObject()) {
+        throw new IOException(
+            "JSON fetched from tap-api-service is not an object: " + offeringJson);
+      }
+
+      return offeringJson;
+    } catch (HttpStatusCodeException e) {
+      LOGGER.error("tap-api-service responded with http status '" + e.getStatusCode() + " "
+          + e.getStatusText() + "' and body: " + e.getResponseBodyAsString());
+      throw e;
+    }
   }
 
   public List<JsonNode> fetchModelOfferings(String modelId, String artifactId) throws IOException {
@@ -48,13 +77,11 @@ public class OfferingsFetcher {
   }
 
   private JsonNode fetchAllOfferingsJsonArray() throws IOException {
-
     LOGGER.debug("Fetching list of offerings from tap-api-service.");
     try {
       ResponseEntity<String> responseEntity =
           tapApiRestTemplate.exchange(tapApiUrl + TAP_API_SERVICE_OFFERINGS_PATH, HttpMethod.GET,
               new HttpEntity<>(new HttpHeaders()), String.class);
-      ObjectMapper jsonMapper = new ObjectMapper();
       JsonNode allOfferingsJson = jsonMapper.readTree(responseEntity.getBody());
       if (allOfferingsJson.isArray()) {
         return allOfferingsJson;
@@ -62,17 +89,15 @@ public class OfferingsFetcher {
         throw new IOException(
             "JSON fetched from tap-api-service is not an array: " + allOfferingsJson);
       }
-    } catch (HttpServerErrorException e) {
+    } catch (HttpStatusCodeException e) {
       LOGGER.error("tap-api-service responded with http status '" + e.getStatusCode() + " "
           + e.getStatusText() + "' and body: " + e.getResponseBodyAsString());
       throw e;
     }
-
   }
 
   private List<JsonNode> pickModelOfferings(JsonNode offeringsListJson, String modelId,
       String artifactId) {
-
     return StreamSupport.stream(offeringsListJson.spliterator(), true)
         .filter(offering -> isModelOffering(offering, modelId, artifactId))
         .collect(Collectors.toList());

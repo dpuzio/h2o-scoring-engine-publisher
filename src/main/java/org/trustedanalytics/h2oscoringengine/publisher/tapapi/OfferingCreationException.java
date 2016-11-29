@@ -17,8 +17,11 @@ public class OfferingCreationException extends Exception {
 
   private static final long serialVersionUID = -2011902125313437463L;
 
+  public OfferingCreationException(String message) {
+    super(message);
+  }
+
   public OfferingCreationException(String message, Throwable cause) {
     super(message, cause);
   }
-
 }

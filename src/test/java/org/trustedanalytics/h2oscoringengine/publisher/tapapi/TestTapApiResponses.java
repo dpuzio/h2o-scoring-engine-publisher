@@ -58,4 +58,8 @@ public class TestTapApiResponses {
   public static String offeringCreated(String offeringId) {
     return "{\"id\":\"" + offeringId + "\"}";
   }
+
+  public static String offeringReady() {
+    return "{\"entity\":{\"state\":\"READY\"}}";
+  }
 }

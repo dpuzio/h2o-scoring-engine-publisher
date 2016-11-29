@@ -34,7 +34,7 @@ import org.springframework.http.converter.ResourceHttpMessageConverter;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
-import org.springframework.web.client.HttpServerErrorException;
+import org.springframework.web.client.HttpStatusCodeException;
 import org.springframework.web.client.RestTemplate;
 import org.trustedanalytics.h2oscoringengine.publisher.restapi.ScoringEngineData;
 
@@ -63,9 +63,8 @@ public class OfferingCreator {
       prepareRestTemplateForMultipart(tapApiRestTemplate);
       ResponseEntity<String> response = tapApiRestTemplate.exchange(
           tapApiUrl + TAP_API_SERVICE_CREATE_OFFERING_PATH, HttpMethod.POST, request, String.class);
-      System.out.println(response.getStatusCode());
       return fetchOfferingId(response.getBody());
-    } catch (HttpServerErrorException e) {
+    } catch (HttpStatusCodeException e) {
       throw new OfferingCreationException(
           "Offering creation failed. Tap-api-service responded with http status '"
               + e.getStatusCode() + " " + e.getStatusText() + "' and body: "
@@ -142,5 +141,4 @@ public class OfferingCreator {
     
     return new OfferingData(offeringId, planId);
   }
-
 }

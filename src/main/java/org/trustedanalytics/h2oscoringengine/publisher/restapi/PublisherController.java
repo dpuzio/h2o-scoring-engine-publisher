@@ -60,8 +60,10 @@ public class PublisherController {
   @ApiOperation(value = "Exposes H2O scoring engine model for download as JAR file",
       notes = "Privilege level: Any consumer of this endpoint must have a valid access token")
   @ApiResponses(
-      value = {@ApiResponse(code = 200, message = "OK", response = FileSystemResource.class),
-          @ApiResponse(code = 400, message = "Request was malformed"), @ApiResponse(code = 500,
+      value = {
+          @ApiResponse(code = 200, message = "OK", response = FileSystemResource.class),
+          @ApiResponse(code = 400, message = "Request was malformed"),
+          @ApiResponse(code = 500,
               message = "Internal server error, e.g. error building or publishing model")})
   @RequestMapping(method = RequestMethod.POST, consumes = "application/x-www-form-urlencoded",
       value = "/rest/h2o/engines/{modelName}/downloads", produces = "application/java-archive")

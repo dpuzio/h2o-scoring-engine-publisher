@@ -26,6 +26,7 @@ import org.trustedanalytics.h2oscoringengine.publisher.steps.AssureOfferingPrese
 import org.trustedanalytics.h2oscoringengine.publisher.steps.H2oResourcesDownloadingStep;
 import org.trustedanalytics.h2oscoringengine.publisher.tapapi.OfferingCreator;
 import org.trustedanalytics.h2oscoringengine.publisher.tapapi.OfferingsFetcher;
+import org.trustedanalytics.h2oscoringengine.publisher.tapapi.ServiceCreator;
 
 public class Publisher {
 
@@ -50,10 +51,15 @@ public class Publisher {
 
   public void publishScoringEngine(ScoringEngineData scoringEngineData)
       throws EnginePublishingException {
+    ObjectMapper jsonMapper = new ObjectMapper();
     AssureOfferingPresenceStep assureOfferingPresenceStep = new AssureOfferingPresenceStep(
-        new OfferingsFetcher(tapApiServiceRestTemplate, tapApiServiceUrl),
-        new OfferingCreator(tapApiServiceRestTemplate, tapApiServiceUrl, new ObjectMapper()));
-    assureOfferingPresenceStep.ensureOfferingExists(scoringEngineData);
+        new OfferingsFetcher(tapApiServiceRestTemplate, tapApiServiceUrl, jsonMapper),
+        new OfferingCreator(tapApiServiceRestTemplate, tapApiServiceUrl, jsonMapper));
+    assureOfferingPresenceStep
+        .ensureOfferingExists(scoringEngineData)
+        .createOfferingInstance(
+            new ServiceCreator(tapApiServiceRestTemplate, tapApiServiceUrl, jsonMapper),
+            scoringEngineData);
   }
 
   private Path buildScoringEngineJar(FilesDownloader h2oFilesDownloader, String modelName)
