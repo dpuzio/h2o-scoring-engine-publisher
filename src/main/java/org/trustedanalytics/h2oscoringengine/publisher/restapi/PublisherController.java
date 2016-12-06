@@ -13,6 +13,7 @@
  */
 package org.trustedanalytics.h2oscoringengine.publisher.restapi;
 
+import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
@@ -41,11 +42,15 @@ import org.trustedanalytics.h2oscoringengine.publisher.restapi.validation.Downlo
 import org.trustedanalytics.h2oscoringengine.publisher.restapi.validation.DownloadRequestValidationRules;
 import org.trustedanalytics.h2oscoringengine.publisher.restapi.validation.ValidationException;
 
-
+@Api
 @RestController
 public class PublisherController {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(PublisherController.class);
+  public static final String API_VERSION = "v1";
+  public static final String DOWNLOAD_ENGINE_PREFIX = "/api/v1/engines/";
+  public static final String DOWNLOAD_ENGINE_URL = DOWNLOAD_ENGINE_PREFIX + "{modelName}/downloads";
+  public static final String PUBLISH_ENGINE_URL = "/api/v1/scoring-engine/jar-scoring-engine";
 
   private final Publisher publisher;
   private final List<DownloadRequestValidationRule> validationRules;
@@ -60,13 +65,11 @@ public class PublisherController {
   @ApiOperation(value = "Exposes H2O scoring engine model for download as JAR file",
       notes = "Privilege level: Any consumer of this endpoint must have a valid access token")
   @ApiResponses(
-      value = {
-          @ApiResponse(code = 200, message = "OK", response = FileSystemResource.class),
-          @ApiResponse(code = 400, message = "Request was malformed"),
-          @ApiResponse(code = 500,
+      value = {@ApiResponse(code = 200, message = "OK", response = FileSystemResource.class),
+          @ApiResponse(code = 400, message = "Request was malformed"), @ApiResponse(code = 500,
               message = "Internal server error, e.g. error building or publishing model")})
   @RequestMapping(method = RequestMethod.POST, consumes = "application/x-www-form-urlencoded",
-      value = "/rest/h2o/engines/{modelName}/downloads", produces = "application/java-archive")
+      value = DOWNLOAD_ENGINE_URL, produces = "application/java-archive")
   @ResponseBody
   public FileSystemResource downloadEngine(HttpServletResponse response,
       @Valid @RequestBody MultiValueMap<String, String> request, @PathVariable String modelName)
@@ -88,7 +91,7 @@ public class PublisherController {
 
   @ApiOperation(value = "Publishes given h2o artifact file as a scoring-engine instance.")
   @RequestMapping(method = RequestMethod.POST, consumes = "application/json",
-      value = "/api/v1/scoring-engine/jar-scoring-engine")
+      value = PUBLISH_ENGINE_URL)
   public void publishEngine(@Valid @RequestBody ScoringEngineData scoringEngineData)
       throws EnginePublishingException {
     LOGGER.info("Got publish request: " + scoringEngineData);

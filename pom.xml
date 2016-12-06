@@ -8,13 +8,13 @@
 	</parent>
 
 	<artifactId>h2o-scoring-engine-publisher</artifactId>
-	<version>0.7.6</version>
+	<version>0.7.7</version>
 	<name>h2o-scoring-engine-publisher</name>
 
 	<properties>
 		<start-class>org.trustedanalytics.h2oscoringengine.publisher.Application</start-class>
 		<jacoco-measurement-instructions>0.850</jacoco-measurement-instructions>
-		<jacoco-measurement-branches>0.800</jacoco-measurement-branches>
+		<jacoco-measurement-branches>0.850</jacoco-measurement-branches>
 		<jacoco-measurement-lines>0.850</jacoco-measurement-lines>
 		<jacoco-measurement-classes>0.900</jacoco-measurement-classes>
 		<docker.imageName>${project.artifactId}</docker.imageName>
@@ -82,6 +82,12 @@
 			<artifactId>model-catalog</artifactId>
 			<version>0.3.20</version>
 			<classifier>api</classifier>
+		</dependency>
+		<dependency>
+			<groupId>com.jayway.restassured</groupId>
+			<artifactId>rest-assured</artifactId>
+			<version>2.5.0</version>
+			<scope>test</scope>
 		</dependency>
 	</dependencies>
 	<build>
@@ -168,6 +174,39 @@
 						<JAVA_OPTS>-Xmx512m</JAVA_OPTS>
 					</env>
 				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>com.github.kongchen</groupId>
+				<artifactId>swagger-maven-plugin</artifactId>
+				<version>3.1.2</version>
+				<configuration>
+					<apiSources>
+						<apiSource>
+							<springmvc>true</springmvc>
+							<locations>org.trustedanalytics.h2oscoringengine.publisher.restapi</locations>
+							<schemes>http</schemes>
+							<basePath>/api/v1</basePath>
+							<info>
+								<title>h2o-scoring-engine-publisher REST API</title>
+								<version>v1</version>
+								<description>Swagger spec for h2o-scoring-engine-publisher REST API</description>
+								<license>
+									<url>https://github.com/trustedanalytics/h2o-scoring-engine-publisher/blob/master/LICENSE.txt</url>
+									<name>Apache License 2.0</name>
+								</license>
+							</info>
+							<swaggerDirectory>${project.basedir}</swaggerDirectory>
+						</apiSource>
+					</apiSources>
+				</configuration>
+				<executions>
+					<execution>
+						<phase>compile</phase>
+						<goals>
+							<goal>generate</goal>
+						</goals>
+					</execution>
+				</executions>
 			</plugin>
 		</plugins>
 	</build>

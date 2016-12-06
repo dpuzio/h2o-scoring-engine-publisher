@@ -1,0 +1,203 @@
+{
+  "swagger" : "2.0",
+  "info" : {
+    "description" : "Swagger spec for h2o-scoring-engine-publisher REST API",
+    "version" : "v1",
+    "title" : "h2o-scoring-engine-publisher REST API",
+    "license" : {
+      "name" : "Apache License 2.0",
+      "url" : "https://github.com/trustedanalytics/h2o-scoring-engine-publisher/blob/master/LICENSE.txt"
+    }
+  },
+  "basePath" : "/api/v1",
+  "schemes" : [ "http" ],
+  "paths" : {
+    "/api/v1/engines/{modelName}/downloads" : {
+      "post" : {
+        "summary" : "Exposes H2O scoring engine model for download as JAR file",
+        "description" : "Privilege level: Any consumer of this endpoint must have a valid access token",
+        "operationId" : "downloadEngine",
+        "consumes" : [ "application/x-www-form-urlencoded" ],
+        "produces" : [ "application/java-archive" ],
+        "parameters" : [ {
+          "in" : "body",
+          "name" : "body",
+          "required" : false,
+          "schema" : {
+            "type" : "object",
+            "additionalProperties" : {
+              "type" : "array",
+              "items" : {
+                "type" : "string"
+              }
+            }
+          }
+        }, {
+          "name" : "",
+          "in" : "path",
+          "required" : true,
+          "type" : "string"
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "schema" : {
+              "$ref" : "#/definitions/FileSystemResource"
+            }
+          },
+          "400" : {
+            "description" : "Request was malformed"
+          },
+          "500" : {
+            "description" : "Internal server error, e.g. error building or publishing model"
+          }
+        }
+      }
+    },
+    "/api/v1/scoring-engine/jar-scoring-engine" : {
+      "post" : {
+        "summary" : "Publishes given h2o artifact file as a scoring-engine instance.",
+        "description" : "",
+        "operationId" : "publishEngine",
+        "parameters" : [ {
+          "in" : "body",
+          "name" : "body",
+          "required" : false,
+          "schema" : {
+            "$ref" : "#/definitions/ScoringEngineData"
+          }
+        } ],
+        "responses" : {
+          "default" : {
+            "description" : "successful operation"
+          }
+        }
+      }
+    }
+  },
+  "definitions" : {
+    "File" : {
+      "type" : "object",
+      "properties" : {
+        "path" : {
+          "type" : "string"
+        },
+        "name" : {
+          "type" : "string"
+        },
+        "parent" : {
+          "type" : "string"
+        },
+        "absolute" : {
+          "type" : "boolean",
+          "default" : false
+        },
+        "canonicalPath" : {
+          "type" : "string"
+        },
+        "parentFile" : {
+          "$ref" : "#/definitions/File"
+        },
+        "absolutePath" : {
+          "type" : "string"
+        },
+        "absoluteFile" : {
+          "$ref" : "#/definitions/File"
+        },
+        "canonicalFile" : {
+          "$ref" : "#/definitions/File"
+        },
+        "directory" : {
+          "type" : "boolean",
+          "default" : false
+        },
+        "file" : {
+          "type" : "boolean",
+          "default" : false
+        },
+        "hidden" : {
+          "type" : "boolean",
+          "default" : false
+        },
+        "totalSpace" : {
+          "type" : "integer",
+          "format" : "int64"
+        },
+        "freeSpace" : {
+          "type" : "integer",
+          "format" : "int64"
+        },
+        "usableSpace" : {
+          "type" : "integer",
+          "format" : "int64"
+        }
+      }
+    },
+    "FileSystemResource" : {
+      "type" : "object",
+      "properties" : {
+        "file" : {
+          "$ref" : "#/definitions/File"
+        },
+        "path" : {
+          "type" : "string"
+        },
+        "outputStream" : {
+          "$ref" : "#/definitions/OutputStream"
+        },
+        "description" : {
+          "type" : "string"
+        },
+        "uri" : {
+          "type" : "string",
+          "format" : "uri"
+        },
+        "readable" : {
+          "type" : "boolean",
+          "default" : false
+        },
+        "filename" : {
+          "type" : "string"
+        },
+        "writable" : {
+          "type" : "boolean",
+          "default" : false
+        },
+        "url" : {
+          "type" : "string",
+          "format" : "url"
+        },
+        "inputStream" : {
+          "$ref" : "#/definitions/InputStream"
+        },
+        "open" : {
+          "type" : "boolean",
+          "default" : false
+        }
+      }
+    },
+    "InputStream" : {
+      "type" : "object"
+    },
+    "OutputStream" : {
+      "type" : "object"
+    },
+    "ScoringEngineData" : {
+      "type" : "object",
+      "required" : [ "artifactId", "modelId", "modelName" ],
+      "properties" : {
+        "modelId" : {
+          "type" : "string",
+          "format" : "uuid"
+        },
+        "artifactId" : {
+          "type" : "string",
+          "format" : "uuid"
+        },
+        "modelName" : {
+          "type" : "string"
+        }
+      }
+    }
+  }
+}
