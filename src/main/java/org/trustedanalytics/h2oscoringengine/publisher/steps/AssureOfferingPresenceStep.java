@@ -16,9 +16,7 @@ package org.trustedanalytics.h2oscoringengine.publisher.steps;
 import com.fasterxml.jackson.databind.JsonNode;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.URL;
 import java.util.List;
-import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.trustedanalytics.h2oscoringengine.publisher.EnginePublishingException;
@@ -27,30 +25,31 @@ import org.trustedanalytics.h2oscoringengine.publisher.tapapi.OfferingCreationEx
 import org.trustedanalytics.h2oscoringengine.publisher.tapapi.OfferingCreator;
 import org.trustedanalytics.h2oscoringengine.publisher.tapapi.OfferingData;
 import org.trustedanalytics.h2oscoringengine.publisher.tapapi.OfferingsFetcher;
+import org.trustedanalytics.modelcatalog.rest.client.ModelCatalogReaderClient;
+import org.trustedanalytics.modelcatalog.rest.client.http.HttpFileResource;
 
 public class AssureOfferingPresenceStep {
-
-  public static final String EXAMPLE_SCORING_ENGINE_RESOURCE_PATH = "/example-scoring-engine.jar";
 
   private static final Logger LOGGER = LoggerFactory.getLogger(AssureOfferingPresenceStep.class);
 
   private final AssureOfferingPresenceStepConfig config;
   private final OfferingCreator offeringCreator;
   private final OfferingsFetcher offeringsFetcher;
+  private ModelCatalogReaderClient modelCatalogClient;
 
-  public AssureOfferingPresenceStep(
-      OfferingsFetcher offeringsFetcher,
-      OfferingCreator offeringCreator) {
-    this(AssureOfferingPresenceStepConfig.defaultConfig(), offeringsFetcher, offeringCreator);
+  public AssureOfferingPresenceStep(OfferingsFetcher offeringsFetcher,
+      OfferingCreator offeringCreator, ModelCatalogReaderClient modelCatalogClient) {
+    this(AssureOfferingPresenceStepConfig.defaultConfig(), offeringsFetcher, offeringCreator,
+        modelCatalogClient);
   }
 
-  public AssureOfferingPresenceStep(
-      AssureOfferingPresenceStepConfig config,
-      OfferingsFetcher offeringsFetcher,
-      OfferingCreator offeringCreator) {
+  public AssureOfferingPresenceStep(AssureOfferingPresenceStepConfig config,
+      OfferingsFetcher offeringsFetcher, OfferingCreator offeringCreator,
+      ModelCatalogReaderClient modelCatalogClient) {
     this.config = config;
     this.offeringsFetcher = offeringsFetcher;
     this.offeringCreator = offeringCreator;
+    this.modelCatalogClient = modelCatalogClient;
   }
 
   public OfferingInstanceCreationStep ensureOfferingExists(ScoringEngineData scoringEngineData)
@@ -59,8 +58,7 @@ public class AssureOfferingPresenceStep {
     List<JsonNode> modelOfferings = fetchModelOfferings(scoringEngineData);
     OfferingData modelOffering;
     if (modelOfferings.size() == 0) {
-      // TODO: get scoring engine bytes from model-catalog DPNG-12233
-      byte[] scoringEngineJar = getExampleScoringEngine();
+      InputStream scoringEngineJar = fetchScoringEngineFromModelCatalog(scoringEngineData);
       try {
         modelOffering =
             offeringCreator.createJavaScoringEngineOffering(scoringEngineData, scoringEngineJar);
@@ -79,39 +77,32 @@ public class AssureOfferingPresenceStep {
 
     LOGGER.debug("Model offering " + modelOffering);
 
-    return new OfferingInstanceCreationStep(modelOffering.getOfferingId(), modelOffering.getPlanId());
+    return new OfferingInstanceCreationStep(modelOffering.getOfferingId(),
+        modelOffering.getPlanId());
   }
 
   private List<JsonNode> fetchModelOfferings(ScoringEngineData scoringEngineData)
       throws EnginePublishingException {
     try {
-      return offeringsFetcher.fetchModelOfferings(scoringEngineData.getModelId(),
-          scoringEngineData.getArtifactId());
+      return offeringsFetcher.fetchModelOfferings(scoringEngineData.getModelId().toString(),
+          scoringEngineData.getArtifactId().toString());
     } catch (IOException e) {
       throw new EnginePublishingException("Unable to fetch model offerings from tap-api-service: ",
           e);
     }
   }
 
-  private byte[] getExampleScoringEngine() throws EnginePublishingException {
-    URL resource = this.getClass().getResource(EXAMPLE_SCORING_ENGINE_RESOURCE_PATH);
-    if (null == resource) {
-      throw new EnginePublishingException(
-          "Scoring engine resource " + EXAMPLE_SCORING_ENGINE_RESOURCE_PATH + " not found");
-    }
-
-    InputStream inputStream =
-        this.getClass().getResourceAsStream(EXAMPLE_SCORING_ENGINE_RESOURCE_PATH);
+  private InputStream fetchScoringEngineFromModelCatalog(ScoringEngineData scoringEngineData)
+      throws EnginePublishingException {
+    LOGGER.info("Fetching artifact {} for model {} from model-catalog.",
+        scoringEngineData.getArtifactId(), scoringEngineData.getModelId());
+    HttpFileResource artifactFile = modelCatalogClient
+        .retrieveArtifactFile(scoringEngineData.getModelId(), scoringEngineData.getArtifactId());
     try {
-      return IOUtils.toByteArray(inputStream);
+      LOGGER.info("Scoring engine JAR succesfully fetched.");
+      return artifactFile.getInputStream();
     } catch (IOException e) {
-      throw new EnginePublishingException("Unable to read example scoring engine: ", e);
-    } finally {
-      try {
-        inputStream.close();
-      } catch (IOException e) {
-        LOGGER.warn("Problem while closing input stream with example scoring engine: ", e);
-      }
+      throw new EnginePublishingException("Unable to retrieve artifact from model-catalog. ", e);
     }
   }
 

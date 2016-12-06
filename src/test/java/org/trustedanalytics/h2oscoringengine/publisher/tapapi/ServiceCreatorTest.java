@@ -30,23 +30,17 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.RestTemplate;
-import org.trustedanalytics.h2oscoringengine.publisher.restapi.ScoringEngineData;
 
 public class ServiceCreatorTest {
 
   private final RestTemplate tapApiRestTemplateMock = mock(RestTemplate.class);
   private final String tapApiTestUrl = "http://tap-api";
-  private final ObjectMapper jsonMapper = new ObjectMapper();
 
   private final String testName = "sample-instance";
   private final String testOfferingId = "offering-1";
   private final String testPlanId = "plan-1";
   private final String testModelId = "model-1";
   private final String testArtifactId = "artifact-1";
-
-  private final ScoringEngineData testScoringEngineData =
-      new ScoringEngineData("some-model-id", "some-artifact-od", "some-model-name");
-  private final byte[] testEngineBytes = "some-string".getBytes();
 
   @Rule
   public final ExpectedException thrown = ExpectedException.none();

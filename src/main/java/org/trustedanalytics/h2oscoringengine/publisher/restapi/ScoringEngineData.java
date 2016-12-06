@@ -13,6 +13,7 @@
  */
 package org.trustedanalytics.h2oscoringengine.publisher.restapi;
 
+import java.util.UUID;
 import javax.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -26,10 +27,10 @@ import lombok.Setter;
 public class ScoringEngineData {
   
   @NotNull
-  private String modelId;
+  private UUID modelId;
   
   @NotNull
-  private String artifactId;
+  private UUID artifactId;
   
   @NotNull
   private String modelName;

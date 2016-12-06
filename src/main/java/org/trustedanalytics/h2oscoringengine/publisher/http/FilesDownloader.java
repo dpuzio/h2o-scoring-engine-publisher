@@ -39,7 +39,7 @@ public class FilesDownloader {
 
   public FilesDownloader(BasicAuthServerCredentials serverCredentials,
       RestTemplate basicAuthRestTemplate) {
-    this.serverUrl = serverCredentials.getHost();
+    this.serverUrl = serverCredentials.getUrl();
     this.basicAuthToken = serverCredentials.getBasicAuthToken();
     this.basicAuthRestTemplate = basicAuthRestTemplate;
   }

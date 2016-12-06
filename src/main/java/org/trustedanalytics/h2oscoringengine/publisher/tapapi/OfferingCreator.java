@@ -17,12 +17,15 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.io.ByteArrayResource;
+import org.springframework.core.io.InputStreamResource;
+import org.springframework.core.io.Resource;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -56,11 +59,11 @@ public class OfferingCreator {
   }
 
   public OfferingData createJavaScoringEngineOffering(ScoringEngineData scoringEngineData,
-      byte[] scoringEngineJar) throws OfferingCreationException {
+      InputStream scoringEngineJar) throws OfferingCreationException {
     HttpEntity<MultiValueMap<String, Object>> request;
     try {
       request = prepareMultiPartRequest(scoringEngineData, scoringEngineJar);
-      prepareRestTemplateForMultipart(tapApiRestTemplate);
+      prepareRestTemplateForInpuStreamResource(tapApiRestTemplate);
       ResponseEntity<String> response = tapApiRestTemplate.exchange(
           tapApiUrl + TAP_API_SERVICE_CREATE_OFFERING_PATH, HttpMethod.POST, request, String.class);
       return fetchOfferingId(response.getBody());
@@ -72,10 +75,16 @@ public class OfferingCreator {
           e);
     } catch (IOException e) {
       throw new OfferingCreationException("Offering creation failed: ", e);
+    } finally {
+      try {
+        scoringEngineJar.close();
+      } catch (IOException e) {
+        LOGGER.warn("Problem while closing input stream with scoring engine: ", e);
+      }
     }
   }
 
-  private void prepareRestTemplateForMultipart(RestTemplate tapApiRestTemplate) {
+  private void prepareRestTemplateForInpuStreamResource(RestTemplate tapApiRestTemplate) {
     List<HttpMessageConverter<?>> converters =
         new ArrayList<>(Arrays.asList(new ResourceHttpMessageConverter(),
             new FormHttpMessageConverter(), new MappingJackson2HttpMessageConverter()));
@@ -83,12 +92,14 @@ public class OfferingCreator {
   }
 
   private HttpEntity<MultiValueMap<String, Object>> prepareMultiPartRequest(
-      ScoringEngineData scoringEngineData, byte[] blobBytes) throws JsonProcessingException {
+      ScoringEngineData scoringEngineData, InputStream blobBytes) throws JsonProcessingException {
     MultiValueMap<String, Object> multiPartRequest = new LinkedMultiValueMap<>();
-    multiPartRequest.add("blob", prepareBlobRequestPart(blobBytes));
+    multiPartRequest.add("blob",
+        prepareBlobRequestPart(blobBytes, scoringEngineData.getModelName() + ".jar"));
     multiPartRequest.add("manifest", prepareManifestRequestPart());
-    multiPartRequest.add("offering", prepareOfferingRequestPart(scoringEngineData.getModelId(),
-        scoringEngineData.getArtifactId(), scoringEngineData.getModelName()));
+    multiPartRequest.add("offering",
+        prepareOfferingRequestPart(scoringEngineData.getModelId().toString(),
+            scoringEngineData.getArtifactId().toString(), scoringEngineData.getModelName()));
 
     HttpHeaders headers = new HttpHeaders();
     headers.setContentType(MediaType.MULTIPART_FORM_DATA);
@@ -96,8 +107,8 @@ public class OfferingCreator {
     return new HttpEntity<>(multiPartRequest, headers);
   }
 
-  private HttpEntity<ByteArrayResource> prepareOfferingRequestPart(String modelId,
-      String artifactId, String modelName) throws JsonProcessingException {
+  private HttpEntity<Resource> prepareOfferingRequestPart(String modelId, String artifactId,
+      String modelName) throws JsonProcessingException {
     OfferingMetadata[] metadata = {new OfferingMetadata("MODEL_ID", modelId),
         new OfferingMetadata("ARTIFACT_ID", artifactId)};
     BinaryOffering binaryOffering =
@@ -110,7 +121,7 @@ public class OfferingCreator {
   }
 
 
-  private HttpEntity<ByteArrayResource> prepareManifestRequestPart() {
+  private HttpEntity<Resource> prepareManifestRequestPart() {
     String binaryManifestJson = "{\"type\": \"JAVA\"}";
     byte[] bytesToBeSent = binaryManifestJson.getBytes();
 
@@ -119,16 +130,32 @@ public class OfferingCreator {
     return new HttpEntity<>(prepareResourceWithFilename(bytesToBeSent, "binary_manifest.json"));
   }
 
-  private HttpEntity<ByteArrayResource> prepareBlobRequestPart(byte[] blobBytes) {
+  private HttpEntity<Resource> prepareBlobRequestPart(InputStream blobBytes, String fileName) {
     LOGGER.info("Adding blob with scoring engine to request.");
-    return new HttpEntity<>(prepareResourceWithFilename(blobBytes, "example-se.jar"));
+    return new HttpEntity<>(prepareResourceWithFilename(blobBytes, fileName));
   }
 
-  private ByteArrayResource prepareResourceWithFilename(byte[] bytes, String filename) {
-    return new ByteArrayResource(bytes) {
+  private ByteArrayResource prepareResourceWithFilename(byte[] byteArray, String filename) {
+    return new ByteArrayResource(byteArray) {
       @Override
       public String getFilename() {
         return filename;
+      }
+    };
+  }
+
+  private Resource prepareResourceWithFilename(InputStream bytes, String filename) {
+    return new InputStreamResource(bytes) {
+      @Override
+      public String getFilename() {
+        return filename;
+      }
+
+      // dealing with Spring's ResourceHttpMessageConverter bug:
+      // https://jira.spring.io/browse/SPR-13571
+      @Override
+      public long contentLength() throws IOException {
+        return -1;
       }
     };
   }
@@ -138,7 +165,7 @@ public class OfferingCreator {
     JsonNode offering = mapper.readTree(jsonBody);
     String offeringId = offering.at("/id").textValue();
     String planId = offering.at("/plans/0/id").textValue();
-    
+
     return new OfferingData(offeringId, planId);
   }
 }

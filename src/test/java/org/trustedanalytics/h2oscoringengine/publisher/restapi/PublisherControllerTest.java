@@ -24,6 +24,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.nio.file.Paths;
+import java.util.UUID;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.springframework.mock.web.MockHttpServletResponse;
@@ -46,8 +47,8 @@ public class PublisherControllerTest {
   private MultiValueMap<String, String> testPostRequest = new LinkedMultiValueMap<>();
   private String testExceptionMesage = "Some test message";
 
-  private String testModelId = "model-id";
-  private String testArtifactId = "artifact-id";
+  private UUID testModelId = UUID.randomUUID();
+  private UUID testArtifactId = UUID.randomUUID();
   private String testScoringEngineName = "some-scoring-engine";
 
   @Test
@@ -67,7 +68,7 @@ public class PublisherControllerTest {
 
     // then
     verify(publisherMock).getScoringEngineJar(credentialsCaptor.capture(), eq(testModelName));
-    assertEquals(testHost, credentialsCaptor.getValue().getHost());
+    assertEquals(testHost, credentialsCaptor.getValue().getUrl());
     assertEquals(testUsername, credentialsCaptor.getValue().getUsername());
     assertEquals(testPassword, credentialsCaptor.getValue().getPassword());
   }

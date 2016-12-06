@@ -8,7 +8,7 @@
 	</parent>
 
 	<artifactId>h2o-scoring-engine-publisher</artifactId>
-	<version>0.7.5</version>
+	<version>0.7.6</version>
 	<name>h2o-scoring-engine-publisher</name>
 
 	<properties>
@@ -34,7 +34,7 @@
 		<dependency>
 			<groupId>org.trustedanalytics</groupId>
 			<artifactId>h2o-scoring-engine-base</artifactId>
-			<version>0.5.4</version>
+			<version>0.5.7</version>
 			<scope>provided</scope>
 		</dependency>
 		<dependency>
@@ -46,10 +46,6 @@
 			<groupId>commons-io</groupId>
 			<artifactId>commons-io</artifactId>
 			<version>2.5</version>
-		</dependency>
-		<dependency>
-			<groupId>org.springframework.security.oauth</groupId>
-			<artifactId>spring-security-oauth2</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>junit</groupId>
@@ -80,6 +76,12 @@
 			<groupId>io.springfox</groupId>
 			<artifactId>springfox-swagger2</artifactId>
 			<version>2.5.0</version>
+		</dependency>
+		<dependency>
+			<groupId>org.trustedanalytics.modelcatalog</groupId>
+			<artifactId>model-catalog</artifactId>
+			<version>0.3.20</version>
+			<classifier>api</classifier>
 		</dependency>
 	</dependencies>
 	<build>
@@ -167,16 +169,6 @@
 					</env>
 				</configuration>
 			</plugin>
-			<plugin>
-				<groupId>org.jacoco</groupId>
-				<artifactId>jacoco-maven-plugin</artifactId>
-				<configuration>
-					<excludes>
-						<exclude>example-scoring-engine.jar</exclude>
-					</excludes>
-				</configuration>
-			</plugin>
 		</plugins>
 	</build>
-
 </project>

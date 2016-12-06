@@ -24,6 +24,9 @@ import static org.trustedanalytics.h2oscoringengine.publisher.tapapi.TestTapApiR
     .offeringCreated;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import java.io.ByteArrayInputStream;
+import java.io.InputStream;
+import java.util.UUID;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -39,8 +42,8 @@ public class OfferingCreatorTest {
   private final RestTemplate tapApiRestTemplateMock = mock(RestTemplate.class);
   private final String tapApiTestUrl = "http://tap-api";
   private final ScoringEngineData testScoringEngineData =
-      new ScoringEngineData("some-model-id", "some-artifact-od", "some-model-name");
-  private final byte[] testEngineBytes = "some-string".getBytes();
+      new ScoringEngineData(UUID.randomUUID(), UUID.randomUUID(), "some-model-name");
+  private final InputStream testEngineBytes = new ByteArrayInputStream("some-string".getBytes());
 
   @Rule
   public final ExpectedException thrown = ExpectedException.none();

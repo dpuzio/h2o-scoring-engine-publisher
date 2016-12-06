@@ -17,6 +17,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import java.nio.file.Path;
 import org.springframework.web.client.RestTemplate;
+import org.trustedanalytics.h2oscoringengine.publisher.enginename.EngineNameSupplier;
 import org.trustedanalytics.h2oscoringengine.publisher.filesystem.FsDirectoryOperations;
 import org.trustedanalytics.h2oscoringengine.publisher.filesystem.PublisherWorkingDirectory;
 import org.trustedanalytics.h2oscoringengine.publisher.http.BasicAuthServerCredentials;
@@ -27,6 +28,7 @@ import org.trustedanalytics.h2oscoringengine.publisher.steps.H2oResourcesDownloa
 import org.trustedanalytics.h2oscoringengine.publisher.tapapi.OfferingCreator;
 import org.trustedanalytics.h2oscoringengine.publisher.tapapi.OfferingsFetcher;
 import org.trustedanalytics.h2oscoringengine.publisher.tapapi.ServiceCreator;
+import org.trustedanalytics.modelcatalog.rest.client.ModelCatalogReaderClient;
 
 public class Publisher {
 
@@ -34,13 +36,18 @@ public class Publisher {
   private final RestTemplate tapApiServiceRestTemplate;
   private final String tapApiServiceUrl;
   private final String engineBaseResourcePath;
+  private final ModelCatalogReaderClient modelCatalogClient;
+  private final EngineNameSupplier engineNameSupplier;
 
   public Publisher(RestTemplate h2oServerRestTemplate, RestTemplate tapApiServiceRestTemplate,
-      String tapApiServiceUrl, String engineBaseJar) {
+      String tapApiServiceUrl, String engineBaseJar, ModelCatalogReaderClient modelCatalogClient,
+      EngineNameSupplier engineNameSupplier) {
     this.engineBaseResourcePath = engineBaseJar;
     this.h2oServerRestTemplate = h2oServerRestTemplate;
     this.tapApiServiceRestTemplate = tapApiServiceRestTemplate;
     this.tapApiServiceUrl = tapApiServiceUrl;
+    this.modelCatalogClient = modelCatalogClient;
+    this.engineNameSupplier = engineNameSupplier;
   }
 
   public Path getScoringEngineJar(BasicAuthServerCredentials h2oCredentials, String modelName)
@@ -54,12 +61,11 @@ public class Publisher {
     ObjectMapper jsonMapper = new ObjectMapper();
     AssureOfferingPresenceStep assureOfferingPresenceStep = new AssureOfferingPresenceStep(
         new OfferingsFetcher(tapApiServiceRestTemplate, tapApiServiceUrl, jsonMapper),
-        new OfferingCreator(tapApiServiceRestTemplate, tapApiServiceUrl, jsonMapper));
-    assureOfferingPresenceStep
-        .ensureOfferingExists(scoringEngineData)
-        .createOfferingInstance(
-            new ServiceCreator(tapApiServiceRestTemplate, tapApiServiceUrl, jsonMapper),
-            scoringEngineData);
+        new OfferingCreator(tapApiServiceRestTemplate, tapApiServiceUrl, jsonMapper),
+        modelCatalogClient);
+    assureOfferingPresenceStep.ensureOfferingExists(scoringEngineData).createOfferingInstance(
+        new ServiceCreator(tapApiServiceRestTemplate, tapApiServiceUrl, jsonMapper),
+        scoringEngineData, engineNameSupplier);
   }
 
   private Path buildScoringEngineJar(FilesDownloader h2oFilesDownloader, String modelName)

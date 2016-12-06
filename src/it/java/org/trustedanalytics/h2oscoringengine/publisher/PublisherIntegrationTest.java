@@ -13,42 +13,53 @@
  */
 package org.trustedanalytics.h2oscoringengine.publisher;
 
+
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.method;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.requestTo;
 import static org.springframework.test.web.client.response.MockRestResponseCreators.withSuccess;
 import static org.trustedanalytics.h2oscoringengine.publisher.tapapi.TestTapApiResponses.offeringCreated;
-
-import static org.trustedanalytics.h2oscoringengine.publisher.tapapi.TestTapApiResponses
-    .offeringReady;
+import static org.trustedanalytics.h2oscoringengine.publisher.tapapi.TestTapApiResponses.offeringReady;
 import static org.trustedanalytics.h2oscoringengine.publisher.tapapi.TestTapApiResponses.oneOfferingString;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.util.UUID;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.client.MockRestServiceServer;
 import org.springframework.web.client.RestTemplate;
+import org.trustedanalytics.h2oscoringengine.publisher.enginename.EngineNameSupplier;
 import org.trustedanalytics.h2oscoringengine.publisher.http.BasicAuthServerCredentials;
+import org.trustedanalytics.h2oscoringengine.publisher.modelcatalog.ModelCatalogMocks;
 import org.trustedanalytics.h2oscoringengine.publisher.restapi.ScoringEngineData;
 import org.trustedanalytics.h2oscoringengine.publisher.steps.H2oResourcesDownloadingStep;
 import org.trustedanalytics.h2oscoringengine.publisher.tapapi.OfferingCreator;
 import org.trustedanalytics.h2oscoringengine.publisher.tapapi.OfferingsFetcher;
 import org.trustedanalytics.h2oscoringengine.publisher.tapapi.ServiceCreator;
+import org.trustedanalytics.modelcatalog.rest.client.ModelCatalogReaderClient;
 
 
 public class PublisherIntegrationTest {
 
   private MockRestServiceServer h2oServerMock;
   private MockRestServiceServer tapApiServerMock;
+  private ModelCatalogReaderClient modelCatalogMock;
+  private EngineNameSupplier engineNameSupplierMock;
   private RestTemplate h2oRestTemplate = new RestTemplate();
   private RestTemplate tapApiRestTemplate = new RestTemplate();
   private String testTapApiServiceUrl = "tap-api-kajdhf";
   private final String testH2oServerUrl = "h2o-server-lkkajjdk";
   private final String testH2oUser = "akljfashf";
   private final String testH2oPassword = "askjfsl";
+  private final UUID testModelId = UUID.randomUUID();
+  private final UUID testArtifactId = UUID.randomUUID();
 
   private String engineBaseResourcePath = "/runtime/h2o-scoring-engine-base-0.5.0.jar";
 
@@ -62,19 +73,24 @@ public class PublisherIntegrationTest {
   private final String getLibRequest = H2oResourcesDownloadingStep.H2O_SERVER_LIB_PATH;
   private final String getOfferingsRequest = OfferingsFetcher.TAP_API_SERVICE_OFFERINGS_PATH;
   private final String createOfferingRequest = OfferingCreator.TAP_API_SERVICE_CREATE_OFFERING_PATH;
-  private final String createServiceInstanceRequest = ServiceCreator.TAP_API_SERVICE_CREATE_SERVICE_INSTANCE_PATH;
+  private final String createServiceInstanceRequest =
+      ServiceCreator.TAP_API_SERVICE_CREATE_SERVICE_INSTANCE_PATH;
 
   @Before
-  public void setUp() {
+  public void setUp() throws Exception {
     h2oServerMock = MockRestServiceServer.createServer(h2oRestTemplate);
     tapApiServerMock = MockRestServiceServer.createServer(tapApiRestTemplate);
+    engineNameSupplierMock = mock(EngineNameSupplier.class);
+    when(engineNameSupplierMock.generateName(eq(testModelName), any()))
+        .thenReturn("some-engine-name");
+    modelCatalogMock = ModelCatalogMocks.mockThatReturnsArtifact(testModelId, testArtifactId);
   }
 
   @Test
   public void getScoringEngineJar_h2oRequestsOccured() throws Exception {
     // given
-    Publisher publisher =
-        new Publisher(h2oRestTemplate, new RestTemplate(), "tap-api-host", engineBaseResourcePath);
+    Publisher publisher = new Publisher(h2oRestTemplate, new RestTemplate(), "tap-api-host",
+        engineBaseResourcePath, modelCatalogMock, engineNameSupplierMock);
     setH2oServerExpectedCalls();
 
     // when
@@ -88,12 +104,12 @@ public class PublisherIntegrationTest {
   public void publishScoringEngine_tapApiServiceRequestsOccured() throws Exception {
     // given
     Publisher sut = new Publisher(h2oRestTemplate, tapApiRestTemplate, testTapApiServiceUrl,
-        engineBaseResourcePath);
+        engineBaseResourcePath, modelCatalogMock, engineNameSupplierMock);
     setTapApiServiceExpectedCalls();
 
     // when
     sut.publishScoringEngine(
-        new ScoringEngineData("some-model", "some-artifact", "some-scoring-engine"));
+        new ScoringEngineData(testModelId, testArtifactId, "some-scoring-engine"));
 
     // then
     tapApiServerMock.verify();
@@ -127,8 +143,9 @@ public class PublisherIntegrationTest {
     tapApiServerMock.expect(requestTo(testTapApiServiceUrl + createOfferingRequest))
         .andExpect(method(HttpMethod.POST))
         .andRespond(withSuccess(offeringCreated("some-offering-id"), MediaType.APPLICATION_JSON));
-    tapApiServerMock.expect(requestTo(
-            testTapApiServiceUrl + OfferingsFetcher.pathForOffering("some-offering-id")))
+    tapApiServerMock
+        .expect(
+            requestTo(testTapApiServiceUrl + OfferingsFetcher.pathForOffering("some-offering-id")))
         .andExpect(method(HttpMethod.GET))
         .andRespond(withSuccess(offeringReady(), MediaType.APPLICATION_JSON));
     tapApiServerMock.expect(requestTo(testTapApiServiceUrl + createServiceInstanceRequest))

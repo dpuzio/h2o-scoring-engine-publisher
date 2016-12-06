@@ -14,10 +14,10 @@
 package org.trustedanalytics.h2oscoringengine.publisher.steps;
 
 import java.io.IOException;
-import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.trustedanalytics.h2oscoringengine.publisher.EnginePublishingException;
+import org.trustedanalytics.h2oscoringengine.publisher.enginename.EngineNameSupplier;
 import org.trustedanalytics.h2oscoringengine.publisher.restapi.ScoringEngineData;
 import org.trustedanalytics.h2oscoringengine.publisher.tapapi.ServiceCreator;
 
@@ -30,28 +30,24 @@ public class OfferingInstanceCreationStep {
   private final String offeringId;
   private final String planId;
 
-  public OfferingInstanceCreationStep(
-      String offeringId,
-      String planId) {
+  public OfferingInstanceCreationStep(String offeringId, String planId) {
     this.offeringId = offeringId;
     this.planId = planId;
   }
 
-  public void createOfferingInstance(ServiceCreator serviceCreator, ScoringEngineData scoringEngineData)
+  public void createOfferingInstance(ServiceCreator serviceCreator,
+      ScoringEngineData scoringEngineData, EngineNameSupplier nameSupplier)
       throws EnginePublishingException {
     LOGGER.info("Creating offering instance: offeringId={}, planId={}, modelId={}, artifactId={}",
         offeringId, planId, scoringEngineData.getModelId(), scoringEngineData.getArtifactId());
     try {
       serviceCreator.createServiceInstance(
-          generateServiceInstanceName(scoringEngineData.getModelName()), offeringId, planId,
-          scoringEngineData.getModelId(), scoringEngineData.getArtifactId());
+          nameSupplier.generateName(scoringEngineData.getModelName(),
+              scoringEngineData.getModelId().toString()),
+          offeringId, planId, scoringEngineData.getModelId().toString(),
+          scoringEngineData.getArtifactId().toString());
     } catch (IOException e) {
       throw new EnginePublishingException("Unable to create service instance", e);
     }
-  }
-
-  private String generateServiceInstanceName(String modelName) {
-    // API Service requires service name to be lower case
-    return (modelName + "-" + UUID.randomUUID().toString().substring(0, 8)).toLowerCase();
   }
 }

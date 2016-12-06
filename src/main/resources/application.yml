@@ -1,6 +1,6 @@
 publisher:
   engineBaseJar:
-    resourcePath: "/runtime/h2o-scoring-engine-base-0.5.4.jar"
+    resourcePath: "/runtime/h2o-scoring-engine-base-0.5.7.jar"
     
 tapApiService:
   url: ${API_SERVICE_HOST:localhost}
@@ -8,6 +8,18 @@ tapApiService:
     accessTokenUri: ${API_SERVICE_TOKEN_URI:}
     clientId: ${API_SERVICE_CLIENT_ID:}
     clientSecret: ${API_SERVICE_CLIENT_SECRET:}
+    
+modelCatalog:
+  url: ${MODEL_CATALOG_URL:localhost}
+  oauth:
+    accessTokenUri: ${MODEL_CATALOG_TOKEN_URI:}
+    clientId: ${MODEL_CATALOG_CLIENT_ID:}
+    clientSecret: ${MODEL_CATALOG_CLIENT_SECRET:}
+    
+keyCounter:
+  host: ${KEY_COUNTER_HOST:localhost}
+  username: ${KEY_COUNTER_USER:}
+  password: ${KEY_COUNTER_PASSWORD:}
     
 logging:
   level:

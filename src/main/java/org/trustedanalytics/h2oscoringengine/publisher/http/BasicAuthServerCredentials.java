@@ -23,7 +23,7 @@ import org.apache.commons.codec.binary.Base64;
 @ToString
 public class BasicAuthServerCredentials {
 
-  private String host;
+  private String url;
   private String username;
   private String password;
   private String basicAuthToken;
@@ -31,10 +31,10 @@ public class BasicAuthServerCredentials {
   public BasicAuthServerCredentials() {
   }
 
-  public BasicAuthServerCredentials(String host, String username, String password) {
+  public BasicAuthServerCredentials(String url, String username, String password) {
     this.username = username;
     this.password = password;
-    this.host = host;
+    this.url = url;
   }
 
   public String getBasicAuthToken() {

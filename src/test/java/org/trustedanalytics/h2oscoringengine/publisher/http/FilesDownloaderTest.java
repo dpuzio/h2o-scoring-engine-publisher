@@ -50,7 +50,7 @@ public class FilesDownloaderTest {
   public void setUp() throws IOException {
     this.testPath = Files.createTempFile("some", "file");
 
-    when(restTemplateMock.exchange(testCredentials.getHost() + testResource, HttpMethod.GET,
+    when(restTemplateMock.exchange(testCredentials.getUrl() + testResource, HttpMethod.GET,
         HttpCommunication.basicAuthRequest(testCredentials.getBasicAuthToken()), byte[].class))
             .thenReturn(responseMock);
   }
@@ -65,7 +65,7 @@ public class FilesDownloaderTest {
     downloader.download(testResource, testPath);
 
     // then
-    verify(restTemplateMock).exchange(testCredentials.getHost() + testResource, HttpMethod.GET,
+    verify(restTemplateMock).exchange(testCredentials.getUrl() + testResource, HttpMethod.GET,
         HttpCommunication.basicAuthRequest(testCredentials.getBasicAuthToken()), byte[].class);
     assertThat(new String(Files.readAllBytes(testPath)), equalTo(testServerResponse));
   }
@@ -74,11 +74,11 @@ public class FilesDownloaderTest {
   public void download_serverResponse401_excpetionWithProperMessageThrown() throws IOException {
     // given
     FilesDownloader downloader = new FilesDownloader(testCredentials, restTemplateMock);
-    String expectedExceptionMessage = "Login to " + testCredentials.getHost() + " with credentials "
+    String expectedExceptionMessage = "Login to " + testCredentials.getUrl() + " with credentials "
         + new String(Base64.decodeBase64(testCredentials.getBasicAuthToken().getBytes())) + " failed";
 
     // when
-    when(restTemplateMock.exchange(testCredentials.getHost() + testResource, HttpMethod.GET,
+    when(restTemplateMock.exchange(testCredentials.getUrl() + testResource, HttpMethod.GET,
         HttpCommunication.basicAuthRequest(testCredentials.getBasicAuthToken()), byte[].class))
             .thenThrow(new HttpClientErrorException(HttpStatus.UNAUTHORIZED));
 
@@ -95,7 +95,7 @@ public class FilesDownloaderTest {
     String expectedExceptionMessage = "Resource not found.";
 
     // when
-    when(restTemplateMock.exchange(testCredentials.getHost() + testResource, HttpMethod.GET,
+    when(restTemplateMock.exchange(testCredentials.getUrl() + testResource, HttpMethod.GET,
         HttpCommunication.basicAuthRequest(testCredentials.getBasicAuthToken()), byte[].class))
             .thenThrow(new HttpClientErrorException(HttpStatus.NOT_FOUND));
 
@@ -113,7 +113,7 @@ public class FilesDownloaderTest {
     String expectedExceptionMessage = "Server response status: " + expectedErrorStatus;
 
     // when
-    when(restTemplateMock.exchange(testCredentials.getHost() + testResource, HttpMethod.GET,
+    when(restTemplateMock.exchange(testCredentials.getUrl() + testResource, HttpMethod.GET,
         HttpCommunication.basicAuthRequest(testCredentials.getBasicAuthToken()), byte[].class))
             .thenThrow(new HttpClientErrorException(expectedErrorStatus));
 

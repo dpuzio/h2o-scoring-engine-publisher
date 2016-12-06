@@ -25,7 +25,13 @@ import org.springframework.security.oauth2.client.token.DefaultAccessTokenReques
 import org.springframework.security.oauth2.client.token.grant.client.ClientCredentialsAccessTokenProvider;
 import org.springframework.security.oauth2.client.token.grant.client.ClientCredentialsResourceDetails;
 import org.springframework.web.client.RestTemplate;
+import org.trustedanalytics.h2oscoringengine.publisher.enginename.EngineNameSupplier;
+import org.trustedanalytics.h2oscoringengine.publisher.enginename.KeyCounterConnectionData;
+import org.trustedanalytics.h2oscoringengine.publisher.http.BasicAuthServerCredentials;
+import org.trustedanalytics.h2oscoringengine.publisher.modelcatalog.OAuth2TokenProvider;
 import org.trustedanalytics.h2oscoringengine.publisher.restapi.validation.DownloadRequestValidationRules;
+import org.trustedanalytics.modelcatalog.rest.client.ModelCatalogClientBuilder;
+import org.trustedanalytics.modelcatalog.rest.client.ModelCatalogReaderClient;
 
 @Configuration
 public class ApplicationConfiguration {
@@ -34,10 +40,12 @@ public class ApplicationConfiguration {
   public Publisher publisher(
       @NotNull @Value("${publisher.engineBaseJar.resourcePath}") String engineBaseJarPath,
       OAuth2RestTemplate tapApiServiceRestTemplate,
-      @NotNull @Value("${tapApiService.url}") String tapApiServiceUrl) {
+      @NotNull @Value("${tapApiService.url}") String tapApiServiceUrl,
+      ModelCatalogReaderClient modelCatalogClient, KeyCounterConnectionData keyCounter) {
 
     return new Publisher(new RestTemplate(), tapApiServiceRestTemplate,
-        getUrlWithHttpProtocol(tapApiServiceUrl), engineBaseJarPath);
+        getUrlWithHttpProtocol(tapApiServiceUrl), engineBaseJarPath, modelCatalogClient,
+        new EngineNameSupplier(keyCounter));
   }
 
   @Bean
@@ -59,6 +67,36 @@ public class ApplicationConfiguration {
   @ConfigurationProperties("tapApiService.oauth")
   public OAuth2ProtectedResourceDetails clientCredentials() {
     return new ClientCredentialsResourceDetails();
+  }
+
+  @Bean
+  public ModelCatalogReaderClient modelCatalogClient(
+      OAuth2ProtectedResourceDetails modelCatalogCredentials,
+      @NotNull @Value("${modelCatalog.url}") String modelCatalogUrl) {
+    ModelCatalogClientBuilder builder =
+        new ModelCatalogClientBuilder(getUrlWithHttpProtocol(modelCatalogUrl));
+    return builder.oAuthTokenProvider(new OAuth2TokenProvider(modelCatalogCredentials))
+        .buildReader();
+  }
+
+  @Bean
+  @ConfigurationProperties("modelCatalog.oauth")
+  public OAuth2ProtectedResourceDetails modelCatalogCredentials() {
+    return new ClientCredentialsResourceDetails();
+  }
+
+  @Bean
+  public KeyCounterConnectionData keyCounter(BasicAuthServerCredentials keyCounterCredentials) {
+    return new KeyCounterConnectionData(new RestTemplate(), keyCounterCredentials);
+  }
+
+  @Bean
+  public BasicAuthServerCredentials keyCounterCredentials(
+      @NotNull @Value("${keyCounter.host}") String keyCounterUrl,
+      @NotNull @Value("${keyCounter.username}") String keyCounterUser,
+      @NotNull @Value("${keyCounter.password}") String keyCounterPassword) {
+    return new BasicAuthServerCredentials(getUrlWithHttpProtocol(keyCounterUrl), keyCounterUser,
+        keyCounterPassword);
   }
 
   String getUrlWithHttpProtocol(String url) {
