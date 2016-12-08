@@ -60,6 +60,6 @@ public class TestTapApiResponses {
   }
 
   public static String offeringReady() {
-    return "{\"entity\":{\"state\":\"READY\"}}";
+    return "{\"state\":\"READY\"}";
   }
 }

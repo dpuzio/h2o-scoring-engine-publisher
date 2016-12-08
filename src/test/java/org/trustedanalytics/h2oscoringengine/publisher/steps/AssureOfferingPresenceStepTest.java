@@ -30,9 +30,6 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.UUID;
-import org.apache.http.HttpEntity;
-import org.apache.http.client.methods.CloseableHttpResponse;
-import org.apache.http.client.methods.HttpRequestBase;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -44,7 +41,6 @@ import org.trustedanalytics.h2oscoringengine.publisher.tapapi.OfferingCreator;
 import org.trustedanalytics.h2oscoringengine.publisher.tapapi.OfferingData;
 import org.trustedanalytics.h2oscoringengine.publisher.tapapi.OfferingsFetcher;
 import org.trustedanalytics.modelcatalog.rest.client.ModelCatalogReaderClient;
-import org.trustedanalytics.modelcatalog.rest.client.http.HttpFileResource;
 
 public class AssureOfferingPresenceStepTest {
 
@@ -64,9 +60,6 @@ public class AssureOfferingPresenceStepTest {
       new ScoringEngineData(testModelId, testArtifactId, testModelName);
   private final String testOfferingId = "some-offering-id";
   private final OfferingData testOffering = new OfferingData(testOfferingId, "test-plan-id");
-
-  // TODO: add tests for model-catalog throwing exception or
-  // returning something strange and expected calls to model-catalog
 
   @Rule
   public final ExpectedException thrown = ExpectedException.none();
@@ -98,7 +91,7 @@ public class AssureOfferingPresenceStepTest {
         .thenReturn(testOffering);
     ObjectMapper mapper = new ObjectMapper();
     ObjectNode offeringInfo = mapper.createObjectNode();
-    offeringInfo.putObject("entity").put("state", "READY");
+    offeringInfo.put("state", "READY");
     when(offeringsFetcherMock.fetchModelOffering(eq(testOfferingId))).thenReturn(offeringInfo);
 
     // when

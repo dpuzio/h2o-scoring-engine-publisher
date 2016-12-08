@@ -20,14 +20,10 @@ import static org.junit.Assert.assertThat;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
-import static org.trustedanalytics.h2oscoringengine.publisher.tapapi.OfferingsFetcher
-    .TAP_API_SERVICE_OFFERINGS_PATH;
-import static org.trustedanalytics.h2oscoringengine.publisher.tapapi.TestTapApiResponses
-    .offeringReady;
-import static org.trustedanalytics.h2oscoringengine.publisher.tapapi.TestTapApiResponses
-    .oneOfferingJson;
-import static org.trustedanalytics.h2oscoringengine.publisher.tapapi.TestTapApiResponses
-    .oneOfferingString;
+import static org.trustedanalytics.h2oscoringengine.publisher.tapapi.OfferingsFetcher.TAP_API_SERVICE_OFFERINGS_PATH;
+import static org.trustedanalytics.h2oscoringengine.publisher.tapapi.TestTapApiResponses.offeringReady;
+import static org.trustedanalytics.h2oscoringengine.publisher.tapapi.TestTapApiResponses.oneOfferingJson;
+import static org.trustedanalytics.h2oscoringengine.publisher.tapapi.TestTapApiResponses.oneOfferingString;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -67,9 +63,8 @@ public class OfferingsFetcherTest {
         eq(HttpMethod.GET), eq(new HttpEntity<>(new HttpHeaders())), eq(String.class)))
             .thenReturn(responseMock);
     when(restTemplateMock.exchange(
-        eq(testTapApiUrl + OfferingsFetcher.pathForOffering(testOfferingId)),
-        eq(HttpMethod.GET), eq(new HttpEntity<>(new HttpHeaders())), eq(String.class)))
-        .thenReturn(responseMock);
+        eq(testTapApiUrl + OfferingsFetcher.pathForOffering(testOfferingId)), eq(HttpMethod.GET),
+        eq(new HttpEntity<>(new HttpHeaders())), eq(String.class))).thenReturn(responseMock);
   }
 
   @Test
@@ -177,7 +172,7 @@ public class OfferingsFetcherTest {
     // then
     assertThat(actualOfferings, empty());
   }
-  
+
   @Test
   public void fetchModelOfferings_tapApiReturnedInvalidMetadataNode_EmptyListReturned()
       throws Exception {
@@ -194,18 +189,32 @@ public class OfferingsFetcherTest {
   }
 
   @Test
+  public void fetchModelOfferings_tapApiReturnedMetadataNodeThatIsNotArray_EmptyListReturned()
+      throws Exception {
+    // given
+    OfferingsFetcher sut = new OfferingsFetcher(restTemplateMock, testTapApiUrl, jsonMapper);
+    when(responseMock.getBody()).thenReturn(prepareJsonWithMetadataNodeNotArray());
+    when(responseMock.getStatusCode()).thenReturn(HttpStatus.OK);
+
+    // when
+    List<JsonNode> actualOfferings = sut.fetchModelOfferings(testModelId, testArtifactId);
+
+    // then
+    assertThat(actualOfferings, empty());
+  }
+
+  @Test
   public void fetchModelOffering_oneOfferingFromTapApi_offeringNodeReturned() throws Exception {
     // given
     OfferingsFetcher sut = new OfferingsFetcher(restTemplateMock, testTapApiUrl, jsonMapper);
-    when(responseMock.getBody())
-        .thenReturn(offeringReady());
+    when(responseMock.getBody()).thenReturn(offeringReady());
     when(responseMock.getStatusCode()).thenReturn(HttpStatus.OK);
 
     // when
     JsonNode actualJson = sut.fetchModelOffering(testOfferingId);
 
     // then
-    assertEquals("READY", actualJson.at("/entity/state").textValue());
+    assertEquals("READY", actualJson.at("/state").textValue());
   }
 
   @Test
@@ -238,14 +247,19 @@ public class OfferingsFetcherTest {
   }
 
   private String prepareJsonWithoutArtifactNode() {
-    return "[{\"metadata\":{\"MODEL_ID\":\""+testModelId+"\"}}]";
+    return "[{\"metadata\": [{\"key\":\"MODEL_ID\",\"value\":\"" + testModelId + "\"}]}]";
   }
-  
+
   private String prepareJsonWithoutModelNode() {
-    return "[{\"metadata\":{\"ARTIFACT_ID\":\""+testArtifactId+"\"}}]";
+    return "[{\"metadata\": [{\"key\":\"ARTIFACT_ID\",\"value\":\"" + testArtifactId + "\"}]}]";
   }
-  
+
   private String prepareJsonWithInvalidMetadataNodes() {
-    return "[{\"metadata\":{\"MODEL_ID\":[1,2], \"ARTIFACT_ID\":[1,2]}}]";
+    return "[{\"metadata\":[{\"MODEL_ID\":[1,2], \"ARTIFACT_ID\":[1,2]}]}]";
+  }
+
+  private String prepareJsonWithMetadataNodeNotArray() {
+    return "[{\"metadata\":{\"MODEL_ID\":\"" + testModelId + "\", \"ARTIFACT_ID\":\""
+        + testArtifactId + "\"}}]";
   }
 }

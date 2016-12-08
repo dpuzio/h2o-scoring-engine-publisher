@@ -13,16 +13,22 @@
  */
 package org.trustedanalytics.h2oscoringengine.publisher.tapapi;
 
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 import lombok.Getter;
 
 @Getter
 public class TapApiOfferingFromList {
-  private final TapApiOfferingFromListEntityField entity;
-  private final Map<String, String> metadata;
+  private final String id;
+  private final TapApiOfferingMetadata[] metadata;
 
-  public TapApiOfferingFromList(String id, Map<String, String> metadata) {
-    this.entity = new TapApiOfferingFromListEntityField(id);
-    this.metadata = metadata;
+  public TapApiOfferingFromList(String id, Map<String, String> metadataMap) {
+    this.id = id;
+    List<TapApiOfferingMetadata> metadataList = metadataMap.entrySet().stream()
+        .map(entry -> new TapApiOfferingMetadata(entry.getKey(), entry.getValue()))
+        .collect(Collectors.toList());
+    this.metadata = new TapApiOfferingMetadata[metadataList.size()];
+    metadataList.toArray(this.metadata);
   }
 }

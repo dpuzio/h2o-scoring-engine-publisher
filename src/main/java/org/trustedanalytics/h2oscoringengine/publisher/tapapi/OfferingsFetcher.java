@@ -17,6 +17,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 import org.slf4j.Logger;
@@ -32,14 +33,14 @@ public class OfferingsFetcher {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(OfferingsFetcher.class);
 
-  public static final String TAP_API_SERVICE_OFFERINGS_PATH = "/api/v2/offerings";
+  public static final String TAP_API_SERVICE_OFFERINGS_PATH = "/api/v3/offerings";
 
   private final RestTemplate tapApiRestTemplate;
   private final String tapApiUrl;
   private final ObjectMapper jsonMapper;
 
-  public OfferingsFetcher(
-      RestTemplate tapApiRestTemplate, String tapApiUrl, ObjectMapper jsonMapper) {
+  public OfferingsFetcher(RestTemplate tapApiRestTemplate, String tapApiUrl,
+      ObjectMapper jsonMapper) {
     this.tapApiRestTemplate = tapApiRestTemplate;
     this.tapApiUrl = tapApiUrl;
     this.jsonMapper = jsonMapper;
@@ -53,9 +54,7 @@ public class OfferingsFetcher {
     LOGGER.debug("Fetching offering from tap-api-service: " + offeringId);
     try {
       ResponseEntity<String> responseEntity =
-          tapApiRestTemplate.exchange(
-              tapApiUrl + pathForOffering(offeringId),
-              HttpMethod.GET,
+          tapApiRestTemplate.exchange(tapApiUrl + pathForOffering(offeringId), HttpMethod.GET,
               new HttpEntity<>(new HttpHeaders()), String.class);
       JsonNode offeringJson = jsonMapper.readTree(responseEntity.getBody());
       if (!offeringJson.isObject()) {
@@ -97,16 +96,32 @@ public class OfferingsFetcher {
   }
 
   private List<JsonNode> pickModelOfferings(JsonNode offeringsListJson, String modelId,
-      String artifactId) {
+      String artifactId) throws IOException {
     return StreamSupport.stream(offeringsListJson.spliterator(), true)
         .filter(offering -> isModelOffering(offering, modelId, artifactId))
         .collect(Collectors.toList());
   }
 
   private boolean isModelOffering(JsonNode offeringJson, String modelId, String artifactId) {
-    JsonNode modelIdNode = offeringJson.at("/metadata/MODEL_ID");
-    JsonNode artifactIdNode = offeringJson.at("/metadata/ARTIFACT_ID");
-    return modelIdNode.isTextual() && artifactIdNode.isTextual()
-        && modelIdNode.textValue().equals(modelId) && artifactIdNode.textValue().equals(artifactId);
+    JsonNode metadataArray = offeringJson.at("/metadata");
+    if (!metadataArray.isArray()) {
+      LOGGER.warn("Metadata node is not an array in offering json returned by tap-api-service: "
+          + metadataArray + " Skipping this offering. The whole json was: " + offeringJson);
+      return false;
+    }
+
+    try {
+      Map<String, String> metadataMap = StreamSupport.stream(metadataArray.spliterator(), true)
+          .collect(Collectors.toMap(jsonNode -> jsonNode.get("key").textValue(),
+              jsonNode -> jsonNode.get("value").textValue()));
+
+      return metadataMap.containsKey("MODEL_ID") && metadataMap.get("MODEL_ID").equals(modelId)
+          && metadataMap.containsKey("ARTIFACT_ID")
+          && metadataMap.get("ARTIFACT_ID").equals(artifactId);
+    } catch (NullPointerException e) {
+      LOGGER.warn("Got invalid metadata node in offering json from tap-api-service: " + offeringJson
+          + ". There's no 'key' or 'value' key in array element.");
+      return false;
+    }
   }
 }

@@ -13,13 +13,16 @@
  */
 package org.trustedanalytics.h2oscoringengine.publisher.tapapi;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
+import lombok.Getter;
 
-public class TapApiOfferingFromListEntityField {
-  @JsonProperty("unique_id")
-  private final String uniqueId;
+@Getter
+public class TapApiOfferingMetadata {
 
-  public TapApiOfferingFromListEntityField(String uniqueId) {
-    this.uniqueId = uniqueId;
+  private final String key;
+  private final String value;
+  
+  public TapApiOfferingMetadata(String key, String value) {
+    this.key = key;
+    this.value = value;
   }
 }

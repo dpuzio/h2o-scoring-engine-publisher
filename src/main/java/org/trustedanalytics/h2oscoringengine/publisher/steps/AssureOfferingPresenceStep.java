@@ -107,8 +107,8 @@ public class AssureOfferingPresenceStep {
   }
 
   private OfferingData getOfferingDataFromJson(JsonNode modelOffering) {
-    String offeringId = modelOffering.at("/entity/unique_id").textValue();
-    String planId = modelOffering.at("/entity/service_plans/0/metadata/guid").textValue();
+    String offeringId = modelOffering.at("/id").textValue();
+    String planId = modelOffering.at("/offeringPlans/0/id").textValue();
 
     return new OfferingData(offeringId, planId);
   }
@@ -117,7 +117,7 @@ public class AssureOfferingPresenceStep {
     for (int i = 0; i < config.getRetryCount(); i++) {
       try {
         JsonNode offeringJson = offeringsFetcher.fetchModelOffering(offeringId);
-        String offeringState = offeringJson.at("/entity/state").textValue();
+        String offeringState = offeringJson.at("/state").textValue();
         LOGGER.info("Offering {} state: {}", offeringId, offeringState);
         if (offeringState.equalsIgnoreCase(config.getDesiredState())) {
           LOGGER.info("Check OK!");
