@@ -8,7 +8,7 @@
 	</parent>
 
 	<artifactId>h2o-scoring-engine-publisher</artifactId>
-	<version>0.7.8</version>
+	<version>0.7.9</version>
 	<name>h2o-scoring-engine-publisher</name>
 
 	<properties>
@@ -18,7 +18,6 @@
 		<jacoco-measurement-lines>0.850</jacoco-measurement-lines>
 		<jacoco-measurement-classes>0.900</jacoco-measurement-classes>
 		<docker.imageName>${project.artifactId}</docker.imageName>
-		<docker.registry>tapimages.us.enableiot.com:8080</docker.registry>
 	</properties>
 
 	<dependencies>
