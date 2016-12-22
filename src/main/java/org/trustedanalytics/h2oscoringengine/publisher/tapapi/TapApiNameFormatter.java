@@ -13,21 +13,21 @@
  */
 package org.trustedanalytics.h2oscoringengine.publisher.tapapi;
 
-import lombok.Getter;
+public class TapApiNameFormatter {
 
-@Getter
-public class BinaryOffering {
+  public static String format(String nameToFormat) {
+    if (nameToFormat == null) {
+      throw new IllegalArgumentException("String to be formatted cannot be null.");
+    }
 
-  private final String name;
-  private final String description;
-  private final OfferingMetadata[] metadata;
-  private final boolean bindable = false;
-  private final String[] tags = {"k8s"};
-  private final OfferingPlan[] plans = {new OfferingPlan()};
+    // lowercasing and replacing all forbidden characters with dash
+    String regex = "[^a-z0-9]+";
+    String formattedName = nameToFormat.toLowerCase().replaceAll(regex, "-");
 
-  public BinaryOffering(String offeringName, OfferingMetadata[] metadata, String modelName) {
-    this.name = TapApiNameFormatter.format(offeringName);
-    this.description = "Offering of h2o scoring engine based on model " + modelName;
-    this.metadata = metadata;
+    // removing dashes at the beginning and at the end of the string
+    String regex2 = "^[-]|[-]$";
+    formattedName = formattedName.replaceAll(regex2, "");
+
+    return formattedName;
   }
 }

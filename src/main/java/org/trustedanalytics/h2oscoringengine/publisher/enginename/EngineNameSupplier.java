@@ -22,6 +22,7 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.HttpStatusCodeException;
 import org.trustedanalytics.h2oscoringengine.publisher.http.HttpCommunication;
+import org.trustedanalytics.h2oscoringengine.publisher.tapapi.TapApiNameFormatter;
 
 public class EngineNameSupplier {
 
@@ -36,10 +37,9 @@ public class EngineNameSupplier {
   }
 
   public String generateName(String modelName, String modelId) throws IOException {
-    // Instance name has to be lowercased and can't contain underscores.
     // Model name is not unique so using part of modelId to make collision less likely while
     // keeping human-readability.
-    String modelNameAdjusted = modelName.replace("_", "-");
+    String modelNameAdjusted = TapApiNameFormatter.format(modelName);
     String randomPart = modelId.substring(0, 4);
 
     return (modelNameAdjusted + "-" + generateSuffix(modelNameAdjusted + randomPart) + "-"
