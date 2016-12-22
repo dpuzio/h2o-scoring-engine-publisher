@@ -26,7 +26,7 @@ public class BinaryOffering {
   private final OfferingPlan[] plans = {new OfferingPlan()};
 
   public BinaryOffering(String offeringName, OfferingMetadata[] metadata, String modelName) {
-    this.name = offeringName;
+    this.name = offeringName.replace("_", "-");
     this.description = "Offering of h2o scoring engine based on model " + modelName;
     this.metadata = metadata;
   }
