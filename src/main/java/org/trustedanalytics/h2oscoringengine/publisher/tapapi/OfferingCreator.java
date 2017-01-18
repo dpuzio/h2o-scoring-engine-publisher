@@ -43,7 +43,7 @@ import org.trustedanalytics.h2oscoringengine.publisher.restapi.ScoringEngineData
 
 public class OfferingCreator {
 
-  public static final String TAP_API_SERVICE_CREATE_OFFERING_PATH = "/api/v2/offerings/binary";
+  public static final String TAP_API_SERVICE_CREATE_OFFERING_PATH = "/api/v3/offerings/binary";
 
   private static final Logger LOGGER = LoggerFactory.getLogger(OfferingCreator.class);
 

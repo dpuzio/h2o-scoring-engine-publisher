@@ -23,8 +23,6 @@ import org.trustedanalytics.h2oscoringengine.publisher.tapapi.ServiceCreator;
 
 public class OfferingInstanceCreationStep {
 
-  public static final String TAP_API_SERVICE_OFFERINGS_PATH = "/api/v2/offerings";
-
   private static final Logger LOGGER = LoggerFactory.getLogger(OfferingInstanceCreationStep.class);
 
   private final String offeringId;

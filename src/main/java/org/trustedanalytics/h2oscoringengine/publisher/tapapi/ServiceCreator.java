@@ -30,7 +30,7 @@ import org.springframework.web.client.RestTemplate;
 
 public class ServiceCreator {
 
-  public static final String TAP_API_SERVICE_CREATE_SERVICE_INSTANCE_PATH = "/api/v2/services";
+  public static final String TAP_API_SERVICE_CREATE_SERVICE_INSTANCE_PATH = "/api/v3/services";
 
   private static final Logger LOGGER = LoggerFactory.getLogger(ServiceCreator.class);
 
@@ -73,7 +73,7 @@ public class ServiceCreator {
     ObjectNode rootNode = jsonMapper.createObjectNode();
     rootNode.put("name", name);
     rootNode.put("type", "SERVICE");
-    rootNode.put("classId", offeringId);
+    rootNode.put("offeringId", offeringId);
     rootNode.putArray("bindings");  // empty array as we have no bindings
 
     ArrayNode metadata = rootNode.putArray("metadata");
