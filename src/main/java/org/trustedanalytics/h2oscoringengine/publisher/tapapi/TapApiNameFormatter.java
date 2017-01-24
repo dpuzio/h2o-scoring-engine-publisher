@@ -15,6 +15,8 @@ package org.trustedanalytics.h2oscoringengine.publisher.tapapi;
 
 public class TapApiNameFormatter {
 
+  private TapApiNameFormatter() { }
+
   public static String format(String nameToFormat) {
     if (nameToFormat == null) {
       throw new IllegalArgumentException("String to be formatted cannot be null.");

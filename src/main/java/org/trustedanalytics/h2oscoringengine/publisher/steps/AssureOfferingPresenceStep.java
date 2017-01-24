@@ -57,7 +57,7 @@ public class AssureOfferingPresenceStep {
 
     List<JsonNode> modelOfferings = fetchModelOfferings(scoringEngineData);
     OfferingData modelOffering;
-    if (modelOfferings.size() == 0) {
+    if (modelOfferings.isEmpty()) {
       InputStream scoringEngineJar = fetchScoringEngineFromModelCatalog(scoringEngineData);
       try {
         modelOffering =

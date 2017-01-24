@@ -17,7 +17,13 @@ import lombok.Getter;
 
 @Getter
 public class OfferingPlan {
-  private final String name = "free";
-  private final String description = "Costless basic plan";
-  private final String cost = "free";
+  private final String name;
+  private final String description;
+  private final String cost;
+
+  public OfferingPlan() {
+    this.name = "free";
+    this.description = "Costless basic plan";
+    this.cost = "free";
+  }
 }

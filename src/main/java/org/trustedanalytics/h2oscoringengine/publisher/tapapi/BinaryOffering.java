@@ -21,13 +21,16 @@ public class BinaryOffering {
   private final String name;
   private final String description;
   private final OfferingMetadata[] metadata;
-  private final boolean bindable = false;
-  private final String[] tags = {"k8s"};
-  private final OfferingPlan[] plans = {new OfferingPlan()};
+  private final boolean bindable;
+  private final String[] tags;
+  private final OfferingPlan[] plans;
 
   public BinaryOffering(String offeringName, OfferingMetadata[] metadata, String modelName) {
     this.name = TapApiNameFormatter.format(offeringName);
     this.description = "Offering of h2o scoring engine based on model " + modelName;
     this.metadata = metadata;
+    this.bindable = false;
+    this.tags = new String[] {"k8s"};
+    this.plans = new OfferingPlan[] {new OfferingPlan()};
   }
 }

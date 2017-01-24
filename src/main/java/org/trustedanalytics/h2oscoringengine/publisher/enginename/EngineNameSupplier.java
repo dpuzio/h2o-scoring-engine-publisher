@@ -26,7 +26,7 @@ import org.trustedanalytics.h2oscoringengine.publisher.tapapi.TapApiNameFormatte
 
 public class EngineNameSupplier {
 
-  private final Logger LOGGER = LoggerFactory.getLogger(EngineNameSupplier.class);
+  private static final Logger LOGGER = LoggerFactory.getLogger(EngineNameSupplier.class);
 
   public static final String KEY_COUNTER_ENDPOINT = "/api/v1/counter/";
 
