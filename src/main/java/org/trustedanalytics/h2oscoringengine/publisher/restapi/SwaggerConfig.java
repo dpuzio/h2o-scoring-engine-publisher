@@ -45,7 +45,7 @@ public class SwaggerConfig {
             "TAP component for building and publishing instances of scoring engines based on H2O models.")
         .version(PublisherController.API_VERSION).license("Apache License Version 2.0")
         .licenseUrl(
-            "https://github.com/trustedanalytics/h2o-scoring-engine-publisher/blob/master/LICENSE.txt")
+            "https://github.com/trustedanalytics-ng/h2o-scoring-engine-publisher/blob/master/LICENSE.txt")
         .build();
   }
 }

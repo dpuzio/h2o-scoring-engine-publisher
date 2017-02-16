@@ -190,7 +190,7 @@
 								<version>v1</version>
 								<description>Swagger spec for h2o-scoring-engine-publisher REST API</description>
 								<license>
-									<url>https://github.com/trustedanalytics/h2o-scoring-engine-publisher/blob/master/LICENSE.txt</url>
+									<url>https://github.com/trustedanalytics-ng/h2o-scoring-engine-publisher/blob/master/LICENSE.txt</url>
 									<name>Apache License 2.0</name>
 								</license>
 							</info>
