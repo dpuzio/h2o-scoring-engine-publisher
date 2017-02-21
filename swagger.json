@@ -6,7 +6,7 @@
     "title" : "h2o-scoring-engine-publisher REST API",
     "license" : {
       "name" : "Apache License 2.0",
-      "url" : "https://github.com/trustedanalytics/h2o-scoring-engine-publisher/blob/master/LICENSE.txt"
+      "url" : "https://github.com/trustedanalytics-ng/h2o-scoring-engine-publisher/blob/master/LICENSE.txt"
     }
   },
   "basePath" : "/api/v1",
